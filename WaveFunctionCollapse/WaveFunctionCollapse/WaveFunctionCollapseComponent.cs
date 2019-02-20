@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
@@ -23,7 +25,7 @@ namespace WaveFunctionCollapse
             pManager.AddPointParameter("Tile Type A", "Type A", "List of all centers of tiles of type A", GH_ParamAccess.list);
             pManager.AddPointParameter("Tile Type B", "Type B", "List of all centers of tiles of type B", GH_ParamAccess.list);
             pManager.AddPointParameter("Whole Tile Points", "Tile Points", "List of all centers in tile design space", GH_ParamAccess.list);
-            //pManager.AddPointParameter("Wave", "", "", GH_ParamAccess.list);
+            pManager.AddPointParameter("Wave", "", "", GH_ParamAccess.list);
 
         }
 
@@ -37,9 +39,10 @@ namespace WaveFunctionCollapse
             pManager.AddPointParameter("Half tiles", "", "", GH_ParamAccess.list);
             pManager.AddPointParameter("Full tiles", "", "", GH_ParamAccess.list);
             pManager.AddPointParameter("Empty tiles", "", "", GH_ParamAccess.list);
+            pManager.AddPointParameter("Seed Pattern", "", "", GH_ParamAccess.tree);
         }
 
-
+        int N = 2;
         // INSIDE
         protected override void SolveInstance(IGH_DataAccess DA)
         {
@@ -57,8 +60,9 @@ namespace WaveFunctionCollapse
 
             // WAVE TO OBSERVE: AREA FOR PATTERN
             List<Point3d> wavePoints = new List<Point3d>();
+            DA.GetDataList<Point3d>(3, wavePoints);
 
-            int N = 2;
+
             var halfTiles = new List<Point3d>();
             var fullTiles = new List<Point3d>();
             var emptyTiles = new List<Point3d>();
@@ -73,13 +77,8 @@ namespace WaveFunctionCollapse
             weights[1] = fullTileWeight;
             weights[2] = emptyTileWeight;
 
-
-
             // RUN WAVEFUNCION COLLAPSE
-            var patterns = Run(tilesA, tilesB, allTiles, N, wavePoints, weights);
-
-            
-
+            var patterns = Run(tilesA, tilesB, allTiles, N, wavePoints, weights, DA);
 
             int x = -10, y = -10, z = -10;
             for (var i = 0; i < patterns.Count; i++)
@@ -92,13 +91,6 @@ namespace WaveFunctionCollapse
                 emptyTiles.AddRange(instance[State.EMPTY]);
             }
 
-            //// GET TILE STATES BASED ON TILE ORIGIN (FROM LIST A/B/REST)
-            //State[,] tileStates = GetTileStates(ConvertToInt(tilesA), ConvertToInt(tilesB), ConvertToInt(allTiles));
-
-            //var miniTileSize = 2;
-            //var numberOfSubTiles = (int)Math.Pow(allTiles.Count - 1, 2);
-
-            //string statesString = BuiltOutputString(numberOfSubTiles, miniTileSize, tileStates);
 
             if (true)
             {
@@ -114,6 +106,11 @@ namespace WaveFunctionCollapse
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Check the inputs you idiot!");
             }
+        }
+
+        int GetNumberofPointsInOneDimension(double firstPointCoordinate, double secondPointCoordinate)
+        {
+            return Math.Abs((int)(0.5 * (firstPointCoordinate - secondPointCoordinate) - 1));
         }
 
         string BuiltOutputString(int subtilesCount, int subtilesSize, State[,] statestoConvert)
@@ -157,17 +154,19 @@ namespace WaveFunctionCollapse
         }
 
         List<Pattern> Run(IEnumerable<Point3d> unitElementsOfTypeA, IEnumerable<Point3d> unitElementsOfTypeB, IEnumerable<Point3d> areaCentres, 
-            int N, List<Point3d> wavePoints, float [] weights)
+            int N, List<Point3d> wavePoints, float [] weights, IGH_DataAccess DA)
         {
             //bool finished = false;
 
             var patterns = PatternsFromSample(unitElementsOfTypeA, unitElementsOfTypeB, areaCentres, weights);
-            var propagatorPatterns = BuildPropagator(N, patterns);
-
-            // array of wave indexes all set to truth
-            var wave = GetWave(wavePoints);
+            BuildPropagator(N, patterns);
 
 
+            int width = GetNumberofPointsInOneDimension(wavePoints[0].X, wavePoints[wavePoints.Count - 1].X);
+            int height = GetNumberofPointsInOneDimension(wavePoints[0].Y, wavePoints[wavePoints.Count - 1].Y);
+            // initial settings
+            Wave newWave = new Wave(width, height, patterns);
+            SeedPattern(width / 2, height / 2, patterns, DA);
             return patterns;
              
             
@@ -180,29 +179,54 @@ namespace WaveFunctionCollapse
             //OutputObservations();
         }
 
-        List<Superposition> GetWaveSuperpositions (List<Point3d> wavePoints)
+        void SeedPattern(int x, int y, List<Pattern> patternsFromSample, IGH_DataAccess DA )
         {
-            var wave = new List<Superposition>();
+            Pattern patternToSeed = highestWeightPattern(patternsFromSample);
+            var outputSeed = patternToSeed.Instantiate(x, y, 0);
 
-            for (int i = 0; i < wavePoints.Count; i++)
-            {
-                wave[i] = new Superposition() ;
-            }
 
-            return wave;
+            var test = new Grasshopper.DataTree<List<Point3d>>();
+    
+            var halfTilePoints = outputSeed[State.HALF_TILE];
+            var fullTilePoints = outputSeed[State.FULL_TILE];
+            var emptyTilePoints = outputSeed[State.EMPTY];
+
+            test.Add(halfTilePoints);
+            test.Add(fullTilePoints);
+            test.Add(emptyTilePoints);
+
+            DA.SetDataTree(6, test);
         }
 
-        List<bool> GetWave (List<Point3d> wavePoints)
+        Pattern highestWeightPattern(List<Pattern> patterns)
         {
-            var wave = new List<bool>();
+            List<Pattern> patternsWithHeighestWeight = new List<Pattern>();
+            float highestWeight = 0;
 
-            for (int i = 0; i < wavePoints.Count; i++)
+            for (int i = 0; i < patterns.Count; i++)
             {
-                wave[i] = true;
+                if (patterns[i].Weight > highestWeight) highestWeight = patterns[i].Weight;
             }
 
-            return wave;
+            for (int i = 0; i < patterns.Count; i++)
+            {
+                if (patterns[i].Weight == highestWeight) patternsWithHeighestWeight.Add(patterns[i]);
+            }
+
+            if (patternsWithHeighestWeight.Count > 1)
+            {
+                Random random = new Random();
+                int randomNumber = random.Next(patternsWithHeighestWeight.Count - 1);
+
+                return patternsWithHeighestWeight[randomNumber];
+            }
+            else
+            {
+                return patternsWithHeighestWeight[0];
+            }
         }
+
+
 
         List<Pattern> PatternsFromSample(IEnumerable<Point3d> unitElementsOfTypeA, IEnumerable<Point3d> unitElementsOfTypeB, IEnumerable<Point3d> areaCentres, float[] weight)
         {
@@ -213,15 +237,12 @@ namespace WaveFunctionCollapse
             const int patternSize = 2;
 
             var subTileStates = new List<Pattern>();
-
-
             var counter = 0;
 
             // GENERATE PATTERNS FROM SAMPLE
             for (int i = 0; i < numberOfSubTiles; i++)
             {
                 var miniTile = new State[patternSize, patternSize];
-                //counter = 0;
                 for (int j = 0; j < patternSize; j++)
                 {
                     for (int k = 0; k < patternSize; k++)
@@ -231,18 +252,39 @@ namespace WaveFunctionCollapse
                 }
                 counter++;
 
-                var pattern = new Pattern(miniTile, weight);
+                var pattern = new Pattern(miniTile, weight, (int)N);
 
                 subTileStates.Add(pattern);
             }
 
             var patterns = subTileStates;
-            // TRANSFORM PATTERNS TO 2D ARRAYS
+
+            // FROM TILES CREATED ABOVE, ROTATE EACH TILE, CREATE NEW TILE FROM ROTATED, THEN CHECK IF THERE ARE ANY DUPLICATES: REMOVE THEM
             List<Pattern> rotatedPatterns = new List<Pattern>();
             rotatedPatterns = GenerateRotatedTiles(patterns, weight);
             var rotatedPatternsWithoutDuplicates = RemoveDuplicates(rotatedPatterns);
 
             return rotatedPatternsWithoutDuplicates;
+        }
+
+        void BuildPropagator(int N, List<Pattern> patternsFromSample)
+        {
+            foreach (Pattern pattern in patternsFromSample)
+            {
+                pattern.InitializeListOfOverlappingNeighbours(patternsFromSample);
+            }
+        }
+
+        void Observe()
+        {
+            //FindLowestEntropy();
+        }
+        void Propagate() { }
+        void OutputObservations() { }
+
+        void FindLowestEntropy(Wave wave)
+        {
+            
         }
 
         List<Pattern> GenerateRotatedTiles(List<Pattern> rawPatternsFromSample, float[] tilesWeights)
@@ -251,40 +293,21 @@ namespace WaveFunctionCollapse
 
             for (int i = 0; i < rawPatternsFromSample.Count; i++)
             {
-                var firstRotation = new Pattern(rawPatternsFromSample[i].RotateMatrix(), tilesWeights);
+                var firstRotation = new Pattern(rawPatternsFromSample[i].RotateMatrix(), tilesWeights, N);
                 withRotation.Add(firstRotation);
-                var secondRotation = new Pattern(firstRotation.RotateMatrix(), tilesWeights);
+                var secondRotation = new Pattern(firstRotation.RotateMatrix(), tilesWeights, N);
                 withRotation.Add(secondRotation);
-                var thirdRotation = new Pattern(secondRotation.RotateMatrix(), tilesWeights);
+                var thirdRotation = new Pattern(secondRotation.RotateMatrix(), tilesWeights, N);
                 withRotation.Add(thirdRotation);
             }
 
             return withRotation;
         }
 
-        List<Pattern> Clone(List<Pattern> listToClone)
-        {
-            List<Pattern> cloned = new List<Pattern>();
-
-            for (int i = 0; i < listToClone.Count; i++)
-            {
-                cloned.Add(listToClone[i]);
-            }
-            return cloned;
-        }
 
         List<Pattern> RemoveDuplicates(List<Pattern> rawPatternsWithRotations)
         {
-            //List<Pattern> duplicatesRemoved = new List<Pattern>(rawPatternsWithRotations);
-            var duplicatesRemoved = Clone(rawPatternsWithRotations);
-
-            //var flatLists = new List<WaveFunctionCollapseComponent.State[]>();
-
-            //for (int k = 0; k < rawPatternsWithRotations.Count; k++)
-            //{
-            //    var flatStates = rawPatternsWithRotations[k].Flatten();
-            //    flatLists.Add(flatStates);
-            //}
+            var duplicatesRemoved = new List<Pattern>(rawPatternsWithRotations);
 
             for (int i = 0; i < duplicatesRemoved.Count - 1; i++)
             {
@@ -363,22 +386,8 @@ namespace WaveFunctionCollapse
             return result;
         }
 
-
-        List<List<Pattern>[,]> BuildPropagator(int N, List<Pattern> patternsFromSample)
-        {
-            int offsetsToConsider = (int)Math.Pow((2 * (N - 1) + 1), 2);
-
-            var propagator = new List<List<Pattern>[,]>();
-
-            foreach (Pattern pattern in patternsFromSample)
-            {
-                var patternPropagator = CreateListofNeighbours(pattern, patternsFromSample, N);
-                propagator.Add(patternPropagator);
-            }
-            return propagator;
-
-        }
-
+        // below: create list of neighbours + find tiles that match: moved to Pattern Class
+        /* 
         List<Pattern>[,] CreateListofNeighbours(Pattern patternFromSample, List<Pattern> possibleNeighbours, int N)
         {
             int offsetsToConsider = (int)Math.Pow((2 * (N - 1) + 1), 2);
@@ -430,44 +439,10 @@ namespace WaveFunctionCollapse
                     }
                 }
             }
-
+        
             return rightMatchForThisLocation;
         }
-
-        void Observe()
-        {
-            //FindLowestEntropy();
-        }
-        void Propagate() { }
-        void OutputObservations() { }
-
-        void FindLowestEntropy(int patternIndex)
-        {
-
-        }
-
-        int[] GetLowestEntropy(List<Pattern>[,] patternToCheckEntropy)
-        {
-            int lowestEntropy = 10000;
-
-            int[] lowestEntropyIndices = new int[2];
-
-            for (int i = 0; i < patternToCheckEntropy.GetLength(0); i++)
-            {
-                for (int j = 0; j < patternToCheckEntropy.GetLength(1); j++)
-                {
-                    if (patternToCheckEntropy[i,j].Count < lowestEntropy)
-                    {
-                        lowestEntropy = patternToCheckEntropy[i, j].Count;
-                        lowestEntropyIndices[0] = i;
-                        lowestEntropyIndices[1] = j;
-
-                    }
-                }
-            }
-            return lowestEntropyIndices;
-        }
-
+        */
 
         float GetShannonEntropyForSquare (float weight)
         {
@@ -475,14 +450,16 @@ namespace WaveFunctionCollapse
 
             return shannonEntropy;
         }
+
         /// Provides an Icon for every component that will be visible in the User Interface. Icons need to be 24x24 pixels.
         protected override System.Drawing.Bitmap Icon
         {
             get
             {
+
                 // You can add image files to your project resources and access them like this:
-                //return Resources.IconForThisComponent;
-                return null;
+                return WaveFunctionCollapse.Properties.Resources.Icon;
+                //return null;
             }
         }
 
@@ -492,6 +469,8 @@ namespace WaveFunctionCollapse
         {
             get { return new Guid("3aac7ab0-722c-4eb0-b65a-e53640525e4b"); }
         }
+
+        public object MyAssemblyName { get; private set; }
     }
 
     struct IntPoint3d

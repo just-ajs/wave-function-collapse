@@ -8,34 +8,96 @@ namespace WaveFunctionCollapse
     internal class Pattern
     {
         private int patternSize;
-        float weight;
+        public Superposition[,] overlapsSuperpositions;
+        float[] overalWeights;
 
-
-        public Pattern(State[,] miniTile, float[] overalWeights)
+        public Pattern(State[,] miniTile, float[] overalWeights, int N)
         {
             MiniTile = miniTile;
+            patternSize = N;
+            this.overalWeights = overalWeights;
         }
 
         public State[,] MiniTile { get; set; }
 
-
-        float WeightPattern ()
+        public void InitializeListOfOverlappingNeighbours(List<Pattern> patternsFromSample)
         {
-            float weight = 0;
+            int offsetsToConsider = (int)Math.Pow((2 * (patternSize - 1) + 1), 2);
+            var overlapDimension = (int)Math.Sqrt(offsetsToConsider);
+            overlapsSuperpositions = new Superposition[overlapDimension, overlapDimension];
 
-            float denominator = MiniTile.GetLength(0) + MiniTile.GetLength(1);
-
-            for (int i = 0; i < MiniTile.GetLength(0); i++)
+            for (int x = 0; x < overlapDimension; x++)
             {
-                for (int j = 0; j < MiniTile.GetLength(1); j++)
+                for (int y = 0; y < overlapDimension; y++)
                 {
-                    //if (MiniTile[i,j] == State.EMPTY) weight += 1/denominator*
+                    overlapsSuperpositions[x, y] = GetLocalSuperposition(x, y, patternsFromSample);
                 }
             }
-            return weight;
         }
 
-        public State[] Flatten ()
+        Superposition GetLocalSuperposition(int x, int y, List<Pattern> patternsFromSample)
+        {
+            //List<Pattern> rightMatchForThisLocation = new List<Pattern>(patternsFromSample);
+            Superposition superpositionForXY = new Superposition(patternsFromSample);
+
+            for (int i = x; i < x + 2; i++)
+            {
+                for (int j = y; j < y + 2; j++)
+                {
+                    if (i < 0 || j < 0) continue;
+                    if (i > MiniTile.GetLength(0) - 1 || j > MiniTile.GetLength(1) - 1) continue;
+                    var patternLocalValue = MiniTile[i, j];
+
+                    int xFromCheckTile = 0, yFromCheckTile = 0;
+
+                    if (x < 0) xFromCheckTile = i + 1;
+                    else if (x == 0) xFromCheckTile = i;
+                    else if (x > 0) xFromCheckTile = i - 1;
+
+                    if (y < 0) yFromCheckTile = j + 1;
+                    else if (y == 0) yFromCheckTile = j;
+                    else if (y > 0) yFromCheckTile = j - 1;
+
+                    if (xFromCheckTile < 0 || yFromCheckTile < 0) continue;
+                    if (xFromCheckTile > MiniTile.GetLength(0) - 1 || yFromCheckTile > MiniTile.GetLength(1) - 1) continue;
+
+                    foreach (var candidate in patternsFromSample)
+                    {
+                        var patternOtherValue = candidate.MiniTile[xFromCheckTile, yFromCheckTile];
+                        if (patternOtherValue != patternLocalValue)
+                        {
+                            //rightMatchForThisLocation.Remove(candidate);
+                            superpositionForXY.coefficients[i] = false;
+                        }
+                    }
+                }
+            }
+
+            return superpositionForXY;
+        }
+
+        public float Weight
+        {
+            get
+            {
+                float weight = 0;
+                for (int i = 0; i < MiniTile.GetLength(0); i++)
+                {
+                    for (int j = 0; j < MiniTile.GetLength(1); j++)
+                    {
+                        if (MiniTile[i, j] == State.HALF_TILE) weight += overalWeights[0];
+                        else if (MiniTile[i, j] == State.FULL_TILE) weight += overalWeights[1];
+                        else if (MiniTile[i, j] == State.EMPTY) weight += overalWeights[2];
+
+                    }
+                }
+
+                return weight;
+            }
+        }
+
+
+        public State[] Flatten()
         {
             var flatStates = new List<State>();
             for (int i = 0; i < MiniTile.GetLength(0); i++)
@@ -103,7 +165,7 @@ namespace WaveFunctionCollapse
                 for (var j = 0; j < MiniTile.GetLength(1); j++)
                 {
                     var tileUnit = MiniTile[i, j];
-                    result[tileUnit].Add(new Point3d(x + i*2, y + j*2, z));
+                    result[tileUnit].Add(new Point3d(x + i * 2, y + j * 2, z));
                 }
             }
 
@@ -130,20 +192,22 @@ namespace WaveFunctionCollapse
                     {
                         sb.Append("F ");
                     }
-                    
+
                 }
             }
 
             return sb.ToString();
         }
+        /*
+                public override int GetHashCode()
+                {
+                    var hashCode = -628551497;
+                    hashCode = hashCode * -1521134295 + patternSize.GetHashCode();
+                    hashCode = hashCode * -1521134295 + weight.GetHashCode();
+                    hashCode = hashCode * -1521134295 + EqualityComparer<State[,]>.Default.GetHashCode(MiniTile);
+                    return hashCode;
+                }
 
-        public override int GetHashCode()
-        {
-            var hashCode = -628551497;
-            hashCode = hashCode * -1521134295 + patternSize.GetHashCode();
-            hashCode = hashCode * -1521134295 + weight.GetHashCode();
-            hashCode = hashCode * -1521134295 + EqualityComparer<State[,]>.Default.GetHashCode(MiniTile);
-            return hashCode;
-        }
+            */
     }
 }
