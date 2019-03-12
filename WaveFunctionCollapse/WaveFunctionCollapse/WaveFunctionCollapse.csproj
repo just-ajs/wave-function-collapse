@@ -31,6 +31,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -56,8 +59,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Grasshopper\DataTree.cs" />
+    <Compile Include="DisplayGeometry.cs" />
+    <Compile Include="Components\PatternComponent.cs" />
+    <Compile Include="Components\EvaluateProportionsComponent.cs" />
+    <Compile Include="PatternFromSample.cs" />
+    <Compile Include="TileSuperposition.cs" />
+    <Compile Include="WaveCollapseHistory.cs" />
+    <Compile Include="GooTypes.cs" />
+    <Compile Include="Components\VisualiseByHistoryComponent.cs" />
     <Compile Include="Pattern.cs" />
+    <Compile Include="Parameters.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -66,13 +77,12 @@
     <Compile Include="State.cs" />
     <Compile Include="Superposition.cs" />
     <Compile Include="Wave.cs" />
-    <Compile Include="WaveFunctionCollapseComponent.cs" />
+    <Compile Include="Components\WaveFunctionCollapseComponent.cs" />
     <Compile Include="WaveFunctionCollapseInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WaveFunctionCollapseRunner.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="GH_IO\Types\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -98,7 +108,8 @@
   -->
   <PropertyGroup>
     <PostBuildEvent>Copy "$(TargetPath)" "C:\Users\Justyna\AppData\Roaming\Grasshopper\Libraries\WaveFunctionCollapse.gha"
-Erase "$(TargetPath)"</PostBuildEvent>
+
+</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <FallbackCulture>en-US</FallbackCulture>

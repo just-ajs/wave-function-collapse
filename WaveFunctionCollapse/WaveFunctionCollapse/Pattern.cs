@@ -5,11 +5,12 @@ using System.Text;
 
 namespace WaveFunctionCollapse
 {
-    internal class Pattern
+    public class Pattern
     {
         private int patternSize;
         public Superposition[,] overlapsSuperpositions;
         float[] overalWeights;
+        
 
         public Pattern(State[,] miniTile, float[] overalWeights, int N)
         {
@@ -26,11 +27,13 @@ namespace WaveFunctionCollapse
             var overlapDimension = (int)Math.Sqrt(offsetsToConsider);
             overlapsSuperpositions = new Superposition[overlapDimension, overlapDimension];
 
-            for (int x = 0; x < overlapDimension; x++)
+            var oneSideNeighboursInOneDimension = ((overlapDimension - 1) / 2);
+
+            for (int x = -oneSideNeighboursInOneDimension; x <= oneSideNeighboursInOneDimension; x++)
             {
-                for (int y = 0; y < overlapDimension; y++)
+                for (int y = -oneSideNeighboursInOneDimension; y <= oneSideNeighboursInOneDimension; y++)
                 {
-                    overlapsSuperpositions[x, y] = GetLocalSuperposition(x, y, patternsFromSample);
+                    overlapsSuperpositions[x + oneSideNeighboursInOneDimension, y + oneSideNeighboursInOneDimension] = GetLocalSuperposition(x, y, patternsFromSample);
                 }
             }
         }
@@ -40,13 +43,67 @@ namespace WaveFunctionCollapse
             //List<Pattern> rightMatchForThisLocation = new List<Pattern>(patternsFromSample);
             Superposition superpositionForXY = new Superposition(patternsFromSample);
 
+            // NEW CODE
+            for (var i = 0; i < patternsFromSample.Count; i++)
+            {
+                var candidate = patternsFromSample[i];
+                if (!this.Overlaps(x, y, candidate))
+                {
+                    superpositionForXY.coefficients[i] = false;
+                }
+            }
+
+
+
+
+
+            // OLD CODE
+
+            //for (int i = x; i < x + 2; i++)
+            //{
+            //    for (int j = y; j < y + 2; j++)
+            //    {
+            //        if (i < 0 || j < 0) continue;
+            //        if (i > MiniTile.GetLength(0) - 1 || j > MiniTile.GetLength(1) - 1) continue;
+            //        var patternLocalValue = MiniTile[i, j];
+
+            //        int xFromCheckTile = 0, yFromCheckTile = 0;
+
+            //        if (x < 0) xFromCheckTile = i + 1;
+            //        else if (x == 0) xFromCheckTile = i;
+            //        else if (x > 0) xFromCheckTile = i - 1;
+
+            //        if (y < 0) yFromCheckTile = j + 1;
+            //        else if (y == 0) yFromCheckTile = j;
+            //        else if (y > 0) yFromCheckTile = j - 1;
+
+            //        if (xFromCheckTile < 0 || yFromCheckTile < 0) continue;
+            //        if (xFromCheckTile > MiniTile.GetLength(0) - 1 || yFromCheckTile > MiniTile.GetLength(1) - 1) continue;
+
+            //        foreach (var candidate in patternsFromSample)
+            //        {
+            //            var patternOtherValue = candidate.MiniTile[xFromCheckTile, yFromCheckTile];
+            //            if (patternOtherValue != patternLocalValue)
+            //            {
+            //                //rightMatchForThisLocation.Remove(candidate);
+            //                superpositionForXY.coefficients[i] = false;
+            //            }
+            //        }
+            //    }
+            //}
+
+            return superpositionForXY;
+        }
+
+        private bool Overlaps(int x, int y, Pattern other)
+        {
             for (int i = x; i < x + 2; i++)
             {
                 for (int j = y; j < y + 2; j++)
                 {
                     if (i < 0 || j < 0) continue;
-                    if (i > MiniTile.GetLength(0) - 1 || j > MiniTile.GetLength(1) - 1) continue;
-                    var patternLocalValue = MiniTile[i, j];
+                    if (i > this.MiniTile.GetLength(0) - 1 || j > this.MiniTile.GetLength(1) - 1) continue;
+                    var patternLocalValue = this.MiniTile[i, j];
 
                     int xFromCheckTile = 0, yFromCheckTile = 0;
 
@@ -59,21 +116,17 @@ namespace WaveFunctionCollapse
                     else if (y > 0) yFromCheckTile = j - 1;
 
                     if (xFromCheckTile < 0 || yFromCheckTile < 0) continue;
-                    if (xFromCheckTile > MiniTile.GetLength(0) - 1 || yFromCheckTile > MiniTile.GetLength(1) - 1) continue;
+                    if (xFromCheckTile > this.MiniTile.GetLength(0) - 1 || yFromCheckTile > this.MiniTile.GetLength(1) - 1) continue;
 
-                    foreach (var candidate in patternsFromSample)
+                    var patternOtherValue = other.MiniTile[xFromCheckTile, yFromCheckTile];
+                    if (patternOtherValue != patternLocalValue)
                     {
-                        var patternOtherValue = candidate.MiniTile[xFromCheckTile, yFromCheckTile];
-                        if (patternOtherValue != patternLocalValue)
-                        {
-                            //rightMatchForThisLocation.Remove(candidate);
-                            superpositionForXY.coefficients[i] = false;
-                        }
+                        return false;
                     }
                 }
             }
 
-            return superpositionForXY;
+            return true;
         }
 
         public float Weight

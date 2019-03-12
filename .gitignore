@@ -1,4 +1,6 @@
 WaveFunctionCollapse/.vs
+WaveFunctionCollapse/packages
+WaveFunctionCollapse/TestResults
 
 bin/
 obj/
