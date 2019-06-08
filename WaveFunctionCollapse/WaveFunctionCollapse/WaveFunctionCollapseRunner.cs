@@ -12,6 +12,7 @@ namespace WaveFunctionCollapse
         int N = 2;
         Wave wave;
 
+        // Main function in which wave function is being observed
         public WaveCollapseHistory Run(List<Pattern> patterns, IEnumerable<Point3d> unitElementsOfTypeA, IEnumerable<Point3d> unitElementsOfTypeB, IEnumerable<Point3d> areaCentres,
             int N, List<Point3d> wavePoints, float[] weights)
         {
@@ -21,21 +22,20 @@ namespace WaveFunctionCollapse
             while (guardCounter < 15)
             {
                 guardCounter++;
-
                 bool collapsedObservations = false;
                 int steps = 0;
                 
-                // get size of wave
+                // Get size of wave
                 int width = GetNumberofPointsInOneDimension(wavePoints[0].X, wavePoints[wavePoints.Count - 1].X);
                 int height = GetNumberofPointsInOneDimension(wavePoints[0].Y, wavePoints[wavePoints.Count - 1].Y);
 
-                // start with random seed in the middle
                 wave = new Wave(width, height, patterns);
-                var seedPattern = GetSeedPattern(width / 2, height / 2, patterns);
-                wave.PropagateByUpdatingSuperposition(width / 2, height / 2, seedPattern);
 
+                // Start with random seed
+                SeedRandom(width, height, patterns);
                 AddCurrentFrameToHistory(timelapse);
 
+                // Break if contracition, otherwise run observations until it is not completaly observed
                 while (!wave.IsCollapsed())
                 {
                     if (wave.Contradiction()) { break; }
@@ -47,7 +47,8 @@ namespace WaveFunctionCollapse
                     steps++;
                 }
 
-                if (wave.Contradiction()) {
+                if (wave.Contradiction())
+                {
                     timelapse.Clear();
                     continue;
                 }
@@ -60,31 +61,49 @@ namespace WaveFunctionCollapse
             return timelapse;
         }
 
+        public void SeedRandom(int width, int height, List<Pattern> patterns)
+        {
+            Random xRand = new Random();
+            Random yRand = new Random();
+
+            var x = xRand.Next(width);
+            var y = yRand.Next(height);
+
+            var seedPattern = GetSeedPattern(x, y, patterns);
+            wave.PropagateByUpdatingSuperposition(x, y, seedPattern);
+        }
+
+        public int[] GetPatternCounts()
+        {
+            return wave.GetCollapsedPatternsCounts();
+        }
+
+        // For time visualisation - each step is added to the timelapse
         void AddCurrentFrameToHistory(WaveCollapseHistory timelapse)
         {
             var timeFrameToPoints = OutputObservations();
             var timeFrameUncollapsed =  wave.GetPossibleTileTypes();
-            var timeFrameElement = new WaveCollapseHistoryElement(timeFrameToPoints.Item1, timeFrameToPoints.Item2, timeFrameToPoints.Item3, wave.superpositions, timeFrameUncollapsed);
+            var patternOccurence = wave.GetCollapsedPatternsCounts();
+
+            var timeFrameElement = new WaveCollapseHistoryElement(timeFrameToPoints.Item1, 
+                timeFrameToPoints.Item2, timeFrameToPoints.Item3, wave.superpositions, timeFrameUncollapsed, patternOccurence);
             timelapse.AddTimeFrame(timeFrameElement);
         }
 
+        // Get 3d points of new tiles 
         public Tuple<List<Point3d>, List<Point3d>, List<Point3d>> OutputObservations()
         {
             var k = wave.Visualise();
             return Tuple.Create(k.Item1, k.Item2, k.Item3);
         }
 
-        public TileSuperposition[,] OutputUnobserved()
-        {
-            var k = wave.GetPossibleTileTypes();
-            return k;
-        }
-
+        // Find width and height of surface
         public int GetNumberofPointsInOneDimension(double firstPointCoordinate, double secondPointCoordinate)
         {
             return Math.Abs((int)(0.5 * (firstPointCoordinate - secondPointCoordinate) - 1));
         }
 
+        // Return first pattern that will be a seed for surface
         public Pattern GetSeedPattern(int x, int y, List<Pattern> patternsFromSample)
         {
             var patternToSeed = highestWeightPattern(patternsFromSample);
@@ -96,6 +115,7 @@ namespace WaveFunctionCollapse
             return patternToSeed;
         }
 
+        // Get pattern with highest weight, if there is few of them - pick randomly
         public Pattern highestWeightPattern(List<Pattern> patterns)
         {
             List<Pattern> patternsWithHeighestWeight = new List<Pattern>();
@@ -124,6 +144,7 @@ namespace WaveFunctionCollapse
             }
         }
 
+        // Check which index has provided pattern in a pattern library
         int FindPatternIndex(Pattern patternToFind, List<Pattern> listOfPatterns)
         {
             int index = 0;
@@ -134,12 +155,6 @@ namespace WaveFunctionCollapse
 
             return index;
         }
-
-        void Propagate(int waveX, int waveY, Pattern chosenForXY, Wave wave)
-        {
-            
-        }
-
-      
+     
     }
 }

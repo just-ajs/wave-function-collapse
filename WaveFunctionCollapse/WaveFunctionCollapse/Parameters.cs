@@ -8,7 +8,7 @@ namespace WaveFunctionCollapse
 {
     public class PatternHistoryParam : GH_PersistentParam<GH_WaveCollapseHistory>
     {
-        public PatternHistoryParam() : base("Pattern history parameter", "PatternHistoryParam", "This is a pattern history parameter", "TERM2", "Parameters") { }
+        public PatternHistoryParam() : base("Pattern history parameter", "PatternHistoryParam", "This is a pattern history parameter", "WFC", "Parameters") { }
 
         public override Guid ComponentGuid
         {
@@ -30,7 +30,7 @@ namespace WaveFunctionCollapse
 
     public class PatternFromSampleParam : GH_PersistentParam<GH_PatternsFromSample>
     {
-        public PatternFromSampleParam() : base("Pattern from sample parameter", "PatternFromSampleParam", "This is a pattern from sample parameter", "TERM2", "Parameters") { }
+        public PatternFromSampleParam() : base("Pattern from sample parameter", "PatternFromSampleParam", "This is a pattern from sample parameter", "WFC", "Parameters") { }
 
         public override Guid ComponentGuid
         {

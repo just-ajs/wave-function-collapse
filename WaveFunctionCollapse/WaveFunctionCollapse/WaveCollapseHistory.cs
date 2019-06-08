@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace WaveFunctionCollapse
 {
+    // store all steps of wave funtion observation
     public interface IWaveCollapseHistory
     {
         IList<WaveCollapseHistoryElement> Elements { get; }
@@ -20,14 +21,17 @@ namespace WaveFunctionCollapse
         public List<Point3d> Empty { get; }
         public Superposition[,] Superpositions;
         public TileSuperposition[,] Uncollapsed;
+        public int[] PatternOccurence;
 
-        public WaveCollapseHistoryElement(List<Point3d> halfTile, List<Point3d> fullTile, List<Point3d> empty, Superposition[,] superpositions, TileSuperposition[,] uncollapsed)
+        public WaveCollapseHistoryElement(List<Point3d> halfTile, List<Point3d> fullTile, 
+            List<Point3d> empty, Superposition[,] superpositions, TileSuperposition[,] uncollapsed, int[] patternOccurence)
         {
             HalfTile = halfTile;
             FullTile = fullTile;
             Empty = empty;
             Superpositions = superpositions;
             Uncollapsed = uncollapsed;
+            PatternOccurence = patternOccurence;
         }
     }
 

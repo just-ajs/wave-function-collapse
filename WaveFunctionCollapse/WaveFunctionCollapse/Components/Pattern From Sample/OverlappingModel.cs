@@ -10,7 +10,7 @@ namespace WaveFunctionCollapse
     {
 
         public PatternComponent()
-          : base("patterns_testtt", "Nickname",  "Description", "TERM2", "WFC_WIP")
+          : base("Overlapping Model", "Patterns Library",  "This will create library of pattern from provided sample", "WFC", "Pattern From Sample")
         {
         }
 
@@ -19,7 +19,7 @@ namespace WaveFunctionCollapse
 
             pManager.AddPointParameter("Tile Type A", "Type A", "List of all centers of tiles of type A", GH_ParamAccess.list);
             pManager.AddPointParameter("Tile Type B", "Type B", "List of all centers of tiles of type B", GH_ParamAccess.list);
-            pManager.AddPointParameter("Whole Tile Points", "Tile Points", "List of all centers in tile design space", GH_ParamAccess.list);
+            pManager.AddPointParameter("Whole Area", "Tile Points", "List of all centers in tile design space", GH_ParamAccess.list);
 
         }
 
@@ -64,20 +64,15 @@ namespace WaveFunctionCollapse
 
             int x = 20, y = 0, z = 0;
 
-            var patternLibrarySize = (int)Math.Sqrt(result.Patterns.Count);
 
-            for (var i = 0; i < patternLibrarySize; i++)
+            for (var i = 0; i < result.Patterns.Count; i++)
             {
-                for (int j = 0; j < patternLibrarySize; j++)
-                {
-                    int index = i + j;
-                    var pattern = result.Patterns[index];
-                    var instance = pattern.Instantiate(x + i * 8, y + j * 8, z);
+                    var pattern = result.Patterns[i];
+                    var instance = pattern.Instantiate(x + i * 6, y, z);
 
                     halfTilesForPatterns.AddRange(instance[State.HALF_TILE]);
                     fullTilesForPatterns.AddRange(instance[State.FULL_TILE]);
                     emptyTilesForPatterns.AddRange(instance[State.EMPTY]);
-                }
             }
 
             var r = new GH_PatternsFromSample(result);
@@ -88,6 +83,7 @@ namespace WaveFunctionCollapse
             DA.SetDataList(3, emptyTilesForPatterns);
         }
 
+        // Calculate weights based on percentage of each tile in sample
         float[] GetWeights (List<Point3d> a, List<Point3d> b, List<Point3d> all)
         {
             float[] weights = new float[3];

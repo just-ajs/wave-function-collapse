@@ -36,6 +36,7 @@ namespace WaveFunctionCollapse
             waveCollapse = new Pattern[width, height];
         }
 
+        // Check the superposition for each place in wave in order to check how many patterns are possible to be placed in each location
         public TileSuperposition[,] GetPossibleTileTypes()
         {
             TileSuperposition[,] uncollapsed = new TileSuperposition[width, height];
@@ -44,61 +45,48 @@ namespace WaveFunctionCollapse
             {
                 for (int j = 0; j < waveCollapse.GetLength(1); j ++)
                 {
-                    //if (waveCollapse[i, j] != null) continue;
-                    //else
+                    for (int m = 0; m < 2; m++)
                     {
-                        int halfStates = 0;
-                        int fullStates = 0;
-                        int emptyStates = 0;
-
-                        Point3d center = new Point3d((double)i, (double)j, 0.0);
-
-                        var list = new Point3d[2,2];
-
-                        Point3d leftBottom = new Point3d((center.X - 1) * 2, (center.Y - 1) * 2, 0.0);
-                        //Point3d leftTop = new Point3d((center.X - 1) * 2, (center.Y + 1) * 2, 0.0);
-                        //Point3d rightBottom = new Point3d((center.X + 1) * 2, (center.Y - 1) * 2, 0.0);
-                        //Point3d rightTop = new Point3d((center.X + 1) * 2, (center.Y + 1) * 2, 0.0);
-
-                        //list[0,0] = leftBottom;
-                        //list[0,1] = leftTop;
-                        //list[1,0] = rightBottom;
-                        //list[1,1] = rightTop;
-
-                        var size = superpositions[i, j].coefficients.Length;
-                        for (int k = 0; k < size; k++)
+                        for (int n = 0; n < 2; n++)
                         {
+                            int halfStates = 0;
+                            int fullStates = 0;
+                            int emptyStates = 0;
 
-                            if (superpositions[i, j].coefficients[k] == true)
+                            for (int k = 0; k < superpositions[i, j].coefficients.Length; k++)
                             {
-
-                                for (int m = 0; m < list.GetLength(0); m++)
+                                if (superpositions[i, j].coefficients[k] == true)
                                 {
-                                    for (int n = 0; n < list.GetLength(1); n++)
+                                    if (patterns[k].MiniTile[m,n] == State.HALF_TILE)
                                     {
-                                        if (patterns[k].MiniTile[m,n] == State.HALF_TILE)
-                                        {
-                                            halfStates++;
-                                        }
-                                        else if (patterns[k].MiniTile[0, 0] == State.FULL_TILE)
-                                        {
-                                            fullStates++;
-                                        }
-                                        else if (patterns[k].MiniTile[0, 0] == State.EMPTY)
-                                        {
-                                            emptyStates++;
-                                        }
+                                        halfStates++;
                                     }
-
+                                    else if (patterns[k].MiniTile[m,n] == State.FULL_TILE)
+                                    {
+                                        fullStates++;
+                                    }
+                                    else if (patterns[k].MiniTile[m,n] == State.EMPTY)
+                                    {
+                                        emptyStates++;
+                                    }
                                 }
                             }
-
                             TileSuperposition a = new TileSuperposition(halfStates, fullStates, emptyStates);
-                            uncollapsed[i, j] = a;
+                            if (i + m > waveCollapse.GetLength(0)-1) continue;
+                            if (j + n > waveCollapse.GetLength(1)-1) continue;
 
+                            if (uncollapsed[i + m, j + n] != null)
+                            {
+                                if (uncollapsed[i + m, j + n].Sum > a.Sum)
+                                {
+                                    uncollapsed[i + m, j + n] = a;
+                                }
+                            }
+                            else
+                            {
+                                uncollapsed[i + m, j + n] = a;
+                            }
                         }
-
-
                     }
                 }
             }
@@ -106,15 +94,16 @@ namespace WaveFunctionCollapse
             return uncollapsed;
         }
 
+        // Convert states to points
         public Tuple<List<Point3d>, List<Point3d>, List<Point3d>> Visualise()
         {
             half = new List<Point3d>();
             full = new List<Point3d>();
             empty = new List<Point3d>();
 
-            for (int i = 0; i < waveCollapse.GetLength(0); i ++)
+            for (int i = 0; i < waveCollapse.GetLength(0); i++)
             {
-                for (int j = 0; j < waveCollapse.GetLength(1); j ++)
+                for (int j = 0; j < waveCollapse.GetLength(1); j++)
                 {
                     if (waveCollapse[i, j] == null) continue;
 
@@ -122,38 +111,27 @@ namespace WaveFunctionCollapse
 
                     Point3d[,] tilePoints = new Point3d[2, 2];
                     tilePoints[0, 0] = new Point3d((center.X - 1) * 2, (center.Y - 1) * 2, 0.0);
-                    //tilePoints[0, 1] = new Point3d((center.X - 1) * 2, (center.Y + 1) * 2, 0.0);
-                    //tilePoints[1, 0] = new Point3d((center.X + 1) * 2, (center.Y - 1) * 2, 0.0);
-                    //tilePoints[1, 1] = new Point3d((center.X + 1) * 2, (center.Y + 1) * 2, 0.0);
 
-                    //for (int m = 0; m < waveCollapse[i, j].MiniTile.GetLength(0); m++)
-                    //{
-                    //    for (int n = 0; n < waveCollapse[i, j].MiniTile.GetLength(1); n++)
+                    {
+                        if (waveCollapse[i, j].MiniTile[0, 0] == State.HALF_TILE)
                         {
-                            if (waveCollapse[i, j].MiniTile[0,0] == State.HALF_TILE)
-                            {
-                                half.Add(tilePoints[0, 0]);
-                            }
-                            else if (waveCollapse[i, j].MiniTile[0, 0] == State.FULL_TILE)
-                            {
-                                full.Add(tilePoints[0, 0]);
-                            }
-                            else if (waveCollapse[i, j].MiniTile[0, 0] == State.EMPTY)
-                            {
-                                empty.Add(tilePoints[0, 0]);
-                            }
+                            half.Add(tilePoints[0, 0]);
                         }
-                //    }
+                        else if (waveCollapse[i, j].MiniTile[0, 0] == State.FULL_TILE)
+                        {
+                            full.Add(tilePoints[0, 0]);
+                        }
+                        else if (waveCollapse[i, j].MiniTile[0, 0] == State.EMPTY)
+                        {
+                            empty.Add(tilePoints[0, 0]);
+                        }
+                    }
                 }
             }
 
             var sortedHalfPoints = half.OrderBy(p => p.X).ThenBy(p => p.Y).ToList();
             var sortedFullPoints = full.OrderBy(p => p.X).ThenBy(p => p.Y).ToList();
             var sortedEmptyPoints = empty.OrderBy(p => p.X).ThenBy(p => p.Y).ToList();
-
-            //var halfResult = RemoveDuplicatesPoints(sortedHalfPoints);
-            //var fullResult = RemoveDuplicatesPoints(sortedFullPoints);
-            //var emptyResult = RemoveDuplicatesPoints(sortedEmptyPoints);
 
             return Tuple.Create(sortedHalfPoints, sortedFullPoints, sortedEmptyPoints);
         }
@@ -163,95 +141,43 @@ namespace WaveFunctionCollapse
             return LowestEntropy() == -1;
         }
 
-        public List<Point3d> RemoveDuplicatesPoints(List<Point3d> rawPatternsWithRotations)
-        {
-            var duplicatesRemoved = new List<Point3d>(rawPatternsWithRotations);
-
-            for (int i = 0; i < duplicatesRemoved.Count - 1; i++)
-            {
-                for (int j = i + 1; j < duplicatesRemoved.Count; j++)
-                {
-                    // Use list[i] and list[j]
-                    var areEqual = duplicatesRemoved[i].Equals(duplicatesRemoved[j]);
-
-                    if (areEqual)
-                    {
-                        duplicatesRemoved.RemoveAt(j);
-                        j--;
-                    }
-                }
-            }
-            return duplicatesRemoved;
-        }
-
-
+        // Find lowest entropy position in entire wave, pick new pattern for this position
         public Tuple<int, int, Pattern> Observe()
         {
-            // Find lowest entropy 
+            // Find lowest entropy position
             var lowestEntropyPosition = FindLowestEntropy();
             var nextPatternToSeedX = lowestEntropyPosition.Item1;
             var nextPatternToSeedY = lowestEntropyPosition.Item2;
-
-            // find pattern element to place in the index indicated above
-            //var nextPattern = wave.superpositions[nextPatternToSeedX, nextPatternToSeedY].GetRandomPatternWithHighWeight(patterns);
+            // Find pattern for lowest entropy position
             var nextPattern = this.PickRandomPatternForGivenSuperposition(nextPatternToSeedX, nextPatternToSeedY);
-            //var nextPatternToPlaceToWave = nextPattern.Item1; //pattern
-            //var nextPatternToPlaceToWaveIndex = nextPattern.Item2; //index of this pattern
-
             return Tuple.Create(nextPatternToSeedX, nextPatternToSeedY, nextPattern);
         }
 
-        Tuple<int, int> FindLowestEntropy()
+        // Count collapsed places in wave
+        public int[] GetCollapsedPatternsCounts()
         {
-            int lowEntropy = this.LowestEntropy();
+            var patternCounts = new int[patterns.Count];
 
-            // If there is contradiction, throw an error and quit
-
-            //if (lowEntropy == -1)
-            //{
-            //    throw new InvalidOperationException("Cell has no patterns left to fill - contradiction");
-            //}
-
-            if (lowEntropy == 0)
+            for (int i = 0; i < width; i++)
             {
-                var indicesOfPatternsWithTheLowestEntropy = this.GetIndicesOfCellsWithLowestEntropy();
-                var lowestEntropyPattern = indicesOfPatternsWithTheLowestEntropy[0];
-                return lowestEntropyPattern;
-            }
-            // If all cells are at entropy 0, processing is complete: Return CollapsedObservations()
-
-
-            int xLoc = 0;
-            int yLoc = 0;
-            var pickedCellFromWave = this.GetRandomCellWithLowestEntropy();
-
-            // find index of this selection
-            for (int x = 0; x < this.superpositions.GetLength(0); ++x)
-            {
-                for (int y = 0; y < this.superpositions.GetLength(1); ++y)
+                for (int j = 0; j < height; j++)
                 {
-                    //if (wave.superpositions[x, y].Equals(pickedCellFromWave))
-                    if (this.superpositions[x, y] == pickedCellFromWave)
+                    var currPattern = waveCollapse[i, j];
+
+                    var patternIndex = patterns.FindIndex(c => c == waveCollapse[i, j]);
+                    if (patternIndex < 0) continue;
+
+                    if (patternCounts[patternIndex] == 0)
                     {
-                        xLoc = x;
-                        yLoc = y;
+                        patternCounts[patternIndex] = 1;
+                    }
+                    else
+                    {
+                        patternCounts[patternIndex]++;
                     }
                 }
             }
-            return Tuple.Create(xLoc, yLoc);
-        }
-
-        public int GetCollapsedCount()
-        {
-            var counter = 0;
-            foreach(var el in waveCollapse)
-            {
-                if (el != null)
-                {
-                    counter++;
-                }
-            }
-            return counter;
+            return patternCounts;
         }
 
         public int GetNonCollapsedCount()
@@ -267,6 +193,7 @@ namespace WaveFunctionCollapse
             return counter;
         }
 
+        // Check if wave is collapse
         public bool IsCollapsed()
         {
             if (this.GetNonCollapsedCount() == 0)
@@ -277,13 +204,14 @@ namespace WaveFunctionCollapse
             return false;
         }
 
+        // With every new placed pattern, its overlapping superposition needs to be applied for a wave
+       
         public void PropagateByUpdatingSuperposition(int xPatternCoordOnWave, int yPatternCoordonWave, Pattern placedPatternOnWave)
         {
             var patternIndex = patterns.FindIndex(c => c == placedPatternOnWave);
+
             // assign pattern
             waveCollapse[xPatternCoordOnWave, yPatternCoordonWave] = placedPatternOnWave;
-
-            // assign superpositions:
 
             // in the wave superposition for this location, make only pattern that is placed on wave true, else to false
             var currentSuperposition = superpositions[xPatternCoordOnWave, yPatternCoordonWave];
@@ -318,7 +246,38 @@ namespace WaveFunctionCollapse
         }
 
 
-        // gets the superposition with lowest entropy however i need index :/
+        // In the wave find lowest entropy in order to place there a pattern
+        Tuple<int, int> FindLowestEntropy()
+        {
+            int lowEntropy = this.LowestEntropy();
+
+            if (lowEntropy == 0)
+            {
+                var indicesOfPatternsWithTheLowestEntropy = this.GetIndicesOfCellsWithLowestEntropy();
+                var lowestEntropyPattern = indicesOfPatternsWithTheLowestEntropy[0];
+                return lowestEntropyPattern;
+            }
+
+            int xLoc = 0;
+            int yLoc = 0;
+            var pickedCellFromWave = this.GetRandomCellWithLowestEntropy();
+
+            // find index of this selection
+            for (int x = 0; x < this.superpositions.GetLength(0); ++x)
+            {
+                for (int y = 0; y < this.superpositions.GetLength(1); ++y)
+                {
+                    if (this.superpositions[x, y] == pickedCellFromWave)
+                    {
+                        xLoc = x;
+                        yLoc = y;
+                    }
+                }
+            }
+            return Tuple.Create(xLoc, yLoc);
+        }
+
+        // Get cell with lowest entropy. If few cells have same entropy, pick randomly from one of them
         public Superposition GetRandomCellWithLowestEntropy()
         {
             var candidates = GetCellsWithLowestEntropy();
@@ -329,6 +288,7 @@ namespace WaveFunctionCollapse
             return candidates[randomNumber];
         }
 
+        // Check cells that has least amount of possible patterns that can be placed in this cell
         public List<Superposition> GetCellsWithLowestEntropy()
         {
             List<Superposition> lowestEntropySuperpositions = new List<Superposition>();
@@ -364,6 +324,7 @@ namespace WaveFunctionCollapse
             return lowestEntropySuperpositionsIndices;
         }
 
+        // Lowest entropy is the value of possible patterns that can be placed in a cell with lowest possible patterns count
         public int LowestEntropy()
         {
             int lowest = 1000;
@@ -383,9 +344,12 @@ namespace WaveFunctionCollapse
             else return lowest;
         }
 
+        // Pick pattern to seed based on roulettewheel selection (based on weights)
         public Pattern PickRandomPatternForGivenSuperposition(int nextPatternToSeedX, int nextPatternToSeedY)
         {
-            return superpositions[nextPatternToSeedX, nextPatternToSeedY].GetRandomPatternWithHighWeight(patterns);
+            return superpositions[nextPatternToSeedX, nextPatternToSeedY].rouletteWheelSelections(patterns);
         }
+
     }
+
 }

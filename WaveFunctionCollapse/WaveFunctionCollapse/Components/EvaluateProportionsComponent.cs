@@ -14,7 +14,8 @@ namespace WaveFunctionCollapse
         /// Initializes a new instance of the EvaluateProportions class.
         /// </summary>
         public EvaluateProportionsComponent()
-          : base("EvaluateProportions", "Nickname","This component will display proportions of occurence of tiles types", "TERM2", "WFC_WIP")
+          : base("Evaluate Proportions", "Proportions", "This component will display proportions of occurence of tiles types", 
+                "WFC", "Wave Fucntion Collapse")
         {
         }
 
@@ -30,12 +31,12 @@ namespace WaveFunctionCollapse
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddSurfaceParameter("", "", "", GH_ParamAccess.item);
-            pManager.AddSurfaceParameter("", "", "", GH_ParamAccess.item);
-            pManager.AddSurfaceParameter("", "", "", GH_ParamAccess.item);
-            pManager.AddTextParameter("", "", "", GH_ParamAccess.item);
-            pManager.AddTextParameter("", "", "", GH_ParamAccess.item);
-            pManager.AddTextParameter("", "", "", GH_ParamAccess.item);
+            pManager.AddSurfaceParameter("Tile 01 Bar", "Tile 01 Bar", "Tile 01 Bar", GH_ParamAccess.item);
+            pManager.AddSurfaceParameter("Tile 02 Bar", "Tile 02 Bar", "Tile 02 Bar", GH_ParamAccess.item);
+            pManager.AddSurfaceParameter("Tile 03 Bar", "Tile 03 Bar", "Tile 03 Bar", GH_ParamAccess.item);
+            pManager.AddTextParameter("Tile 01 Count", "", "", GH_ParamAccess.item);
+            pManager.AddTextParameter("Tile 02 Count", "", "", GH_ParamAccess.item);
+            pManager.AddTextParameter("Tile 03 Count", "", "", GH_ParamAccess.item);
 
         }
 
@@ -56,6 +57,8 @@ namespace WaveFunctionCollapse
             double y = 0;
             DA.GetData<double>(4, ref y);
 
+
+            // Visualise each tile type in bar graph
             int sum = GetSum(surfaceType01, surfaceType02, surfaceType03);
 
             var height01 = GetObjectVisualHeight(surfaceType01, sum) * 40;
@@ -73,8 +76,6 @@ namespace WaveFunctionCollapse
             var half = NurbsSurface.CreateFromCorners(points01[0], points01[1], points01[3], points01[2]);
             var full = NurbsSurface.CreateFromCorners(points02[0], points02[1], points02[3], points02[2]);
             var empty = NurbsSurface.CreateFromCorners(points03[0], points03[1], points03[3], points03[2]);
-
-           // var t = new TextObject();
 
 
             DA.SetData(0, half);
@@ -108,14 +109,10 @@ namespace WaveFunctionCollapse
             return (a.Count / (float)sum);
         }
 
-
-
         protected override System.Drawing.Bitmap Icon
         {
             get
             {
-                //You can add image files to your project resources and access them like this:
-                // return Resources.IconForThisComponent;
                 return null;
             }
         }

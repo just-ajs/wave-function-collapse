@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
@@ -14,7 +15,7 @@ namespace WaveFunctionCollapse
         /// </summary>
         public VisualiseByHistoryComponent()
           : base("Visualise by History", "Nickname",  "Description",
-              "TERM2", "WFC_WIP")
+              "WFC", "Wave Fucntion Collapse")
         {
         }
 
@@ -24,6 +25,7 @@ namespace WaveFunctionCollapse
             pManager.AddNumberParameter("Timelapse", "Timelapse", "Timelapse to visualise", GH_ParamAccess.item);
             pManager.AddSurfaceParameter("TILE 01", "TILE 01", "First tile type here", GH_ParamAccess.item);
             pManager.AddSurfaceParameter("TILE 02", "TILE 02", "First tile type here", GH_ParamAccess.item);
+            pManager.AddSurfaceParameter("TILE 03", "TILE 03", "First tile type here", GH_ParamAccess.item);
             pManager.AddNumberParameter("X WAVE LOCATION", "X", "X", GH_ParamAccess.item);
             pManager.AddNumberParameter("Y WAVE LOCATION", "Y", "Y", GH_ParamAccess.item);
             pManager.AddColourParameter("tile 01 colour", "", "", GH_ParamAccess.item);
@@ -41,6 +43,8 @@ namespace WaveFunctionCollapse
             pManager.AddSurfaceParameter("wave: empty surfaces", "", "", GH_ParamAccess.list);
             pManager.AddColourParameter("colours", "", "", GH_ParamAccess.list);
             pManager.AddSurfaceParameter("uncollapsed", "", "", GH_ParamAccess.list);
+            pManager.AddNumberParameter("pattern count", "", "", GH_ParamAccess.list);
+           
 
         }
 
@@ -58,39 +62,31 @@ namespace WaveFunctionCollapse
             Brep surfaceType02 = new Brep();
             DA.GetData<Brep>(3, ref surfaceType02);
 
+
+            Brep surfaceType03 = new Brep();
+            DA.GetData<Brep>(4, ref surfaceType03);
+
+
             double wavePositionX = new double();
-            DA.GetData<double>(4, ref wavePositionX);
+            DA.GetData<double>(5, ref wavePositionX);
 
             double wavePositionY = new double();
-            DA.GetData<double>(5, ref wavePositionY);
+            DA.GetData<double>(6, ref wavePositionY);
 
             Color tile01Colour = new Color();
-            DA.GetData<Color>(6, ref tile01Colour);
+            DA.GetData<Color>(7, ref tile01Colour);
 
             Color tile02Colour = new Color();
-            DA.GetData<Color>(7, ref tile02Colour);
+            DA.GetData<Color>(8, ref tile02Colour);
 
             Color tile03Colour = new Color();
-            DA.GetData<Color>(8, ref tile03Colour);
+            DA.GetData<Color>(9, ref tile03Colour);
 
             var waveElements = GetWaveAtSpecificTime(waveCollapseHistory, frameFromTimeLapse);
 
-
-
             var uncollapsed = waveElements.Uncollapsed;
 
-
-            // uncollapsed
             var tempUncollapsed = GetUncollapsedPoints(uncollapsed);
-
-            //var tempUncollapsedH = new HashSet<Point3d>(tempUncollapsed);
-
-            // remove from uncollapsed list all points that are in list of half/ full/ empty
-            //tempUncollapsedH.ExceptWith(waveElements.HalfTile);
-            //tempUncollapsedH.ExceptWith(waveElements.FullTile);
-            //tempUncollapsedH.ExceptWith(waveElements.Empty);
-
-            //var tempUncollapsedList = new List<Point3d>(tempUncollapsedH);
 
             // move tiles on canvas
             var halfTilesRelocated = MovePointsOnCanvas((int)wavePositionX, (int)wavePositionY, waveElements.HalfTile);
@@ -102,8 +98,6 @@ namespace WaveFunctionCollapse
             var fullTilesRelocatedVectors = pointsToVectors(fullTilesRelocated);
             var emptyTilesRelocatedVectors = pointsToVectors(emptyRelocated);
 
-
-
             // move uncollapsed on canvas
             var uncollapsedMoved = MovePointsOnCanvas((int)wavePositionX, (int)wavePositionY, tempUncollapsed);
             var uncollapsedRelocatedVectors = pointsToVectors(uncollapsedMoved);
@@ -112,7 +106,7 @@ namespace WaveFunctionCollapse
             // duplicate surfaces to calculated locations
             var duplicatedHalfSurfaces = DuplicateTiles(surfaceType01, halfTilesRelocatedVectors);
             var duplicatedFullSurfaces = DuplicateTiles(surfaceType02, fullTilesRelocatedVectors);
-            var duplicatedEmptySurfaces = DuplicateTiles(surfaceType02, emptyTilesRelocatedVectors);
+            var duplicatedEmptySurfaces = DuplicateTiles(surfaceType03, emptyTilesRelocatedVectors);
             var duplicatedUncollapsed = DuplicateTiles(surfaceType01, uncollapsedRelocatedVectors);
 
             var colours = GetUncollapsedColors(uncollapsed, tile01Colour, tile02Colour, tile03Colour);
@@ -122,8 +116,36 @@ namespace WaveFunctionCollapse
             DA.SetDataList(2, duplicatedEmptySurfaces);
             DA.SetDataList(3, colours);
             DA.SetDataList(4, duplicatedUncollapsed);
+            DA.SetDataList(5, waveElements.PatternOccurence);
+        }
 
 
+        IEnumerable<float> CalculateTileTypeDistances (List<Vector3d> oneTileType)
+        {
+            float averageDistance = 0;
+
+            for (int i = 0; i < oneTileType.Count; i++)
+            {
+                for (int j = 0; j < oneTileType.Count; j++)
+                {
+                    var currentDistance = (float)EuclideanDistance(oneTileType[i], oneTileType[j]);
+                    averageDistance += currentDistance;
+                }
+
+            }
+            averageDistance = averageDistance / (oneTileType.Count * oneTileType.Count);
+            yield return averageDistance;
+        }
+
+
+        // implementation for floating-point EuclideanDistance
+        // code from: 
+        //https://codereview.stackexchange.com/questions/120933/calculating-distance-with-euclidean-manhattan-and-chebyshev-in-c
+
+        public static double EuclideanDistance(Vector3d a, Vector3d b)
+        {
+            double square = (a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y);
+            return square;
         }
 
         List<Color> GetUncollapsedColors(TileSuperposition[,] uncollapsed, Color a, Color b, Color c)
@@ -174,12 +196,8 @@ namespace WaveFunctionCollapse
             {
                 for (int j = 0; j < uncollapsed.GetLength(1); j++)
                 {
-                    //if (uncollapsed[i, j] == null) continue;
-                    //else
-                    //{
-                        Point3d vector = new Point3d(i*2, j*2, 0);
-                        uncollapsedVectors.Add(vector);
-                    //}
+                    Point3d vector = new Point3d((i*2)-2, (j*2)-2, 0);
+                    uncollapsedVectors.Add(vector);
                 }
             }
 
@@ -210,7 +228,7 @@ namespace WaveFunctionCollapse
             return res;
         }
 
-        List<Brep> DuplicateTiles(Brep tileType, List<Vector3d> vectors)
+        public List<Brep> DuplicateTiles(Brep tileType, List<Vector3d> vectors)
         {
             List<Brep> list = new List<Brep>();
             for (int i = 0; i < vectors.Count; i++)
@@ -245,7 +263,7 @@ namespace WaveFunctionCollapse
             return a;
         }
 
-        Brep DuplicateTileAndMoveByVector(Brep tileToMove, Vector3d vector)
+        public Brep DuplicateTileAndMoveByVector(Brep tileToMove, Vector3d vector)
         {
             var dup = tileToMove.DuplicateBrep();
             dup.Translate(vector);

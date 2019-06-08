@@ -25,19 +25,19 @@ namespace WaveFunctionCollapse
             this.N = N;
         }
 
+        // Get patterns from sample and calculate their superpositions of overlapping neighbours
         public List<Pattern> Extract ()
         {
-            var patterns = PatternsFromSample(unitElementsOfType0, unitElementsOfType1, unitElementsCenters, tilesWeights);
+            var patterns = PatternsFromSampleOverlapping(unitElementsOfType0, unitElementsOfType1, unitElementsCenters, tilesWeights);
             BuildPropagator(N, patterns);
 
             return patterns;
-            //PatternFromSampleElement a = new PatternFromSampleElement(patterns);
-
-            //return a;
         }
 
-        public List<Pattern> PatternsFromSample(IEnumerable<Point3d> unitElementsOfTypeA, IEnumerable<Point3d> unitElementsOfTypeB, IEnumerable<Point3d> areaCentres, float[] weight)
+        // From provided points create patterns that are result of pairing 4 points that are next to each other
+        public List<Pattern> PatternsFromSampleOverlapping(IEnumerable<Point3d> unitElementsOfTypeA, IEnumerable<Point3d> unitElementsOfTypeB, IEnumerable<Point3d> areaCentres, float[] weight)
         {
+            // Get states based on unit tile type
             State[,] tileStates = GetTileStates(ConvertToInt(unitElementsOfTypeA), ConvertToInt(unitElementsOfTypeB), ConvertToInt(areaCentres));
 
             int tileSize = (int)Math.Sqrt(areaCentres.Count());
@@ -47,7 +47,7 @@ namespace WaveFunctionCollapse
             var subTileStates = new List<Pattern>();
             var counter = 0;
 
-            // GENERATE PATTERNS FROM SAMPLE
+            // Assign states values to pattern
             for (int i = 0; i < numberOfSubTiles; i++)
             {
                 var miniTile = new State[patternSize, patternSize];
@@ -60,6 +60,7 @@ namespace WaveFunctionCollapse
                 }
                 counter++;
 
+                // Create a new pattern
                 var pattern = new Pattern(miniTile, weight, (int)N);
 
                 subTileStates.Add(pattern);
@@ -75,7 +76,7 @@ namespace WaveFunctionCollapse
             return rotatedPatternsWithoutDuplicates;
         }
 
-
+        // This function creates for each pattern a list of possible overlapping neighbours
         public void BuildPropagator(int N, List<Pattern> patternsFromSample)
         {
             foreach (Pattern pattern in patternsFromSample)
@@ -84,7 +85,7 @@ namespace WaveFunctionCollapse
             }
         }
 
-
+        // if tiles are the same - remove them
         List<Pattern> RemoveDuplicates(List<Pattern> rawPatternsWithRotations)
         {
             var duplicatesRemoved = new List<Pattern>(rawPatternsWithRotations);
@@ -93,7 +94,6 @@ namespace WaveFunctionCollapse
             {
                 for (int j = i + 1; j < duplicatesRemoved.Count; j++)
                 {
-                    // Use list[i] and list[j]
                     var areEqual = duplicatesRemoved[i].Equals(duplicatesRemoved[j]);
 
                     if (areEqual)
@@ -106,10 +106,7 @@ namespace WaveFunctionCollapse
             return duplicatesRemoved;
         }
 
-
-
-
-
+        // Set states based on unit types
         private State[,] GetTileStates(IEnumerable<IntPoint3d> unitElementsOfTypeA, IEnumerable<IntPoint3d> unitElementsOfTypeB, IEnumerable<IntPoint3d> areaCentres)
         {
             // A + B
@@ -173,6 +170,7 @@ namespace WaveFunctionCollapse
             return result;
         }
 
+        // Convert list into 2d array 
         private T[,] Reshape<T>(IEnumerable<T> container, int rows, int columns)
         {
             T[,] result = new T[rows, columns];

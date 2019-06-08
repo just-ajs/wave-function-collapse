@@ -9,13 +9,11 @@ namespace WaveFunctionCollapse
     {
         public bool[] coefficients;
 
-
         public Superposition(List<Pattern> patternFromSample)
         {
             coefficients = new bool[patternFromSample.Count];
             for (int i = 0; i < coefficients.Length; i++) { coefficients[i] = true; }
         }
-
 
         public void MakeAllFalseBesideOnePattern (int patternIndex)
         {
@@ -24,6 +22,7 @@ namespace WaveFunctionCollapse
             coefficients[patternIndex] = true;
         }
 
+        // If another superposition has false value - set also false to this one
         public void OverlayWithAnother (Superposition superpositionToOVerlay)
         {
             for (int i = 0; i < coefficients.Length; i++)
@@ -32,6 +31,7 @@ namespace WaveFunctionCollapse
             }
         }
 
+        // The more possible patterns the highest entropy
         public int Entropy {
             get
             {
@@ -54,7 +54,8 @@ namespace WaveFunctionCollapse
             return weightSum;
         }
 
-        Pattern rouletteWheelSelections(List<Pattern> patternFromSample)
+        // Based on weights, if weights is 0.52 there is 52% chance to be picked
+        public Pattern rouletteWheelSelections(List<Pattern> patternFromSample)
         {
             var candidates = GetPatternsFromSuperposition(patternFromSample);
             Pattern selected = null;
@@ -84,22 +85,7 @@ namespace WaveFunctionCollapse
             return random.NextDouble() * (maximum - minimum) + minimum;
         }
 
-        public Pattern GetRandomPatternWithHighWeight (List<Pattern> patternsFromSample)
-        {
-            Pattern selectedFromHighWeights = rouletteWheelSelections(patternsFromSample);
-            //int indexOfSelectedPattern = findPatternIndex(selectedFromHighWeights, patternsFromSample);
-
-            return selectedFromHighWeights;
-
-        }
-
-        int findPatternIndex (Pattern pattern, List<Pattern> a)
-        {
-            int index = 0;
-            for (int i = 0; i < a.Count; i++) {  if (Pattern.ReferenceEquals(pattern, a[i])) index = i; }
-            return index;
-        }
-
+        // Get list of all patterns that are still possible candidates 
         List<Pattern> GetPatternsFromSuperposition(List<Pattern> patternFromSample)
         {
             var patternsFromSuperposition = new List<Pattern>(patternFromSample);

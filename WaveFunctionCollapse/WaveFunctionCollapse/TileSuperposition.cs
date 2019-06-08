@@ -15,5 +15,10 @@
 
             Sum = a + b + c;
         }
+
+        public override string ToString()
+        {
+            return $"{Superpositions[0]}, {Superpositions[1]}, {Superpositions[2]}";
+        }
     }
 }

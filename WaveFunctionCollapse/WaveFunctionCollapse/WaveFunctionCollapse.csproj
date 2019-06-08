@@ -59,10 +59,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DisplayGeometry.cs" />
-    <Compile Include="Components\PatternComponent.cs" />
+    <Compile Include="Components\Pattern From Sample\OverlappingModel.cs" />
     <Compile Include="Components\EvaluateProportionsComponent.cs" />
+    <Compile Include="Components\Pattern From Sample\SimpleTiledModel.cs" />
     <Compile Include="PatternFromSample.cs" />
+    <Compile Include="Components\RandomPatternComponent.cs" />
     <Compile Include="TileSuperposition.cs" />
     <Compile Include="WaveCollapseHistory.cs" />
     <Compile Include="GooTypes.cs" />
@@ -78,7 +79,6 @@
     <Compile Include="Superposition.cs" />
     <Compile Include="Wave.cs" />
     <Compile Include="Components\WaveFunctionCollapseComponent.cs" />
-    <Compile Include="WaveFunctionCollapseInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WaveFunctionCollapseRunner.cs" />
   </ItemGroup>

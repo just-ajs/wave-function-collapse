@@ -15,8 +15,8 @@ namespace WaveFunctionCollapse
 {
     public partial class WaveFunctionCollapseComponent : GH_Component
     {
-        public WaveFunctionCollapseComponent() : base("WaveFunctionCollapse", "WFC",
-              "Me trying to code something", "TERM2", "WFC_WIP")
+        public WaveFunctionCollapseComponent() : base("Observe and Collapse", "Observe and Collapse",
+              "Observe pattern within given wave and populate it", "WFC", "Wave Fucntion Collapse")
         {
        }
 
@@ -31,9 +31,8 @@ namespace WaveFunctionCollapse
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddNumberParameter("Number of rotated tiles", "Offsetes count", "", GH_ParamAccess.item);
-            pManager.AddTextParameter("Panel texts", "", "", GH_ParamAccess.list);
             pManager.AddParameter(new PatternHistoryParam());
-
+            pManager.AddNumberParameter("Pattern Count", "", "", GH_ParamAccess.list);
         }
 
         int N = 2;
@@ -58,23 +57,13 @@ namespace WaveFunctionCollapse
             var history = wfc.Run(patterns, tilesA, tilesB, allTiles, N, wavePoints, weights);
             var return_value = new GH_WaveCollapseHistory(history);
 
-            while (return_value == null) 
-                {
-                     wfc = new WaveFunctionCollapseRunner();
-                     history = wfc.Run(patterns, tilesA, tilesB, allTiles, N, wavePoints, weights);
-                     return_value = new GH_WaveCollapseHistory(history);
-                }
-
-            //var result = wfc.OutputObservations();
-            //var red = wfc.OutputUnobserved();
-
+            var patternsOccurence = wfc.GetPatternCounts();
 
             if (true)
             {
                 DA.SetData(0, patterns.Count);
-                DA.SetDataList(1, patterns.Select(p => p.ToString()));
-                DA.SetData(2, return_value);
-
+                DA.SetData(1, return_value);
+                DA.SetDataList(2, patternsOccurence);
             }
             else
             {

@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 
 namespace WaveFunctionCollapse
 {
+
+    // Type that passes all steps of wave function observations
     public class GH_WaveCollapseHistory : GH_Goo<IWaveCollapseHistory>
     {
         public GH_WaveCollapseHistory() { Value = new WaveCollapseHistory(); }
@@ -35,7 +37,7 @@ namespace WaveFunctionCollapse
         }
     }
 
-
+    // Type that passes patterns from provided sample
     public class GH_PatternsFromSample : GH_Goo<PatternFromSampleElement>
     {
         public GH_PatternsFromSample() { Value = new PatternFromSampleElement(); }
