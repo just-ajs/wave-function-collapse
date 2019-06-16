@@ -16,33 +16,40 @@ namespace WaveFunctionCollapse
         float[] tilesWeights = new float[3];
         int N = 0;
 
-        public PatternFromSampleExtractor (IEnumerable<Point3d> unitElementsOfTypeA, IEnumerable<Point3d> unitElementsOfTypeB, IEnumerable<Point3d> areaCentres, float[] weight, int N)
+        bool rotation = false;
+
+        public PatternFromSampleExtractor (IEnumerable<Point3d> unitElementsOfTypeA, IEnumerable<Point3d> unitElementsOfTypeB, IEnumerable<Point3d> areaCentres, float[] weight, int N, bool rotation)
         {
             unitElementsOfType0 = unitElementsOfTypeA;
             unitElementsOfType1 = unitElementsOfTypeB;
             unitElementsCenters = areaCentres;
             tilesWeights = weight;
             this.N = N;
+            this.rotation = rotation;
         }
 
         // Get patterns from sample and calculate their superpositions of overlapping neighbours
         public List<Pattern> Extract ()
         {
-            var patterns = PatternsFromSampleOverlapping(unitElementsOfType0, unitElementsOfType1, unitElementsCenters, tilesWeights);
+            var patterns = PatternsFromSampleOverlapping(unitElementsOfType0, unitElementsOfType1, unitElementsCenters, tilesWeights, rotation);
             BuildPropagator(N, patterns);
 
             return patterns;
         }
 
         // From provided points create patterns that are result of pairing 4 points that are next to each other
-        public List<Pattern> PatternsFromSampleOverlapping(IEnumerable<Point3d> unitElementsOfTypeA, IEnumerable<Point3d> unitElementsOfTypeB, IEnumerable<Point3d> areaCentres, float[] weight)
+        public List<Pattern> PatternsFromSampleOverlapping(IEnumerable<Point3d> unitElementsOfTypeA, 
+            IEnumerable<Point3d> unitElementsOfTypeB, IEnumerable<Point3d> areaCentres, float[] weight, bool rotation)
         {
             // Get states based on unit tile type
             State[,] tileStates = GetTileStates(ConvertToInt(unitElementsOfTypeA), ConvertToInt(unitElementsOfTypeB), ConvertToInt(areaCentres));
 
+            // Size of side of input sample (if 5x5, then there is 25 area centers)
             int tileSize = (int)Math.Sqrt(areaCentres.Count());
-            int numberOfSubTiles = (int)Math.Pow(tileSize - 1, 2);
-            const int patternSize = 2;
+
+            // Number of small patterns from sample pattern
+            int numberOfSubTiles = (int)Math.Pow((tileSize + 1) - N, 2);
+            // const int patternSize = 2;
 
             var subTileStates = new List<Pattern>();
             var counter = 0;
@@ -50,12 +57,12 @@ namespace WaveFunctionCollapse
             // Assign states values to pattern
             for (int i = 0; i < numberOfSubTiles; i++)
             {
-                var miniTile = new State[patternSize, patternSize];
-                for (int j = 0; j < patternSize; j++)
+                var miniTile = new State[N, N];
+                for (int j = 0; j < N; j++)
                 {
-                    for (int k = 0; k < patternSize; k++)
+                    for (int k = 0; k < N; k++)
                     {
-                        miniTile[j, k] = tileStates[counter % (tileSize - 1) + j, counter / (tileSize - 1) + k];
+                        miniTile[j, k] = tileStates[counter % (tileSize + 1 - N) + j, counter / (tileSize + 1 - N) + k];
                     }
                 }
                 counter++;
@@ -68,12 +75,21 @@ namespace WaveFunctionCollapse
 
             var patterns = subTileStates;
 
-            // FROM TILES CREATED ABOVE, ROTATE EACH TILE, CREATE NEW TILE FROM ROTATED, THEN CHECK IF THERE ARE ANY DUPLICATES: REMOVE THEM
-            List<Pattern> rotatedPatterns = new List<Pattern>();
-            rotatedPatterns = GenerateRotatedTiles(patterns, weight);
-            var rotatedPatternsWithoutDuplicates = RemoveDuplicates(rotatedPatterns);
+            // From tiles above, rotate each tile to get more variety - if asked
+            // Remove duplicates no matter if the was rotation or not
+            if (rotation)
+            {
+                List<Pattern> rotatedPatterns = new List<Pattern>();
+                rotatedPatterns = GenerateRotatedTiles(patterns, weight);
 
-            return rotatedPatternsWithoutDuplicates;
+                return RemoveDuplicates(rotatedPatterns);
+            }
+            else
+            {
+                return RemoveDuplicates(patterns);
+
+            }
+
         }
 
         // This function creates for each pattern a list of possible overlapping neighbours
@@ -213,6 +229,7 @@ namespace WaveFunctionCollapse
         public IEnumerable<Point3d> UnitElementsOfType1 { get; set; }
         public IEnumerable<Point3d> UnitElementsCenters { get; set; }
         public float[] TilesWeights { get; set; }
+        public int N { get; set; }
     }
 
 }

@@ -20,6 +20,8 @@ namespace WaveFunctionCollapse
             pManager.AddPointParameter("Tile Type A", "Type A", "List of all centers of tiles of type A", GH_ParamAccess.list);
             pManager.AddPointParameter("Tile Type B", "Type B", "List of all centers of tiles of type B", GH_ParamAccess.list);
             pManager.AddPointParameter("Whole Area", "Tile Points", "List of all centers in tile design space", GH_ParamAccess.list);
+            pManager.AddNumberParameter("Tile Size", "Tile Size", "Smallest Tile Size for example 2x2", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("Rotate tiles", "Rotation", "True if you want to rotate tiles", GH_ParamAccess.item);
 
         }
 
@@ -45,6 +47,15 @@ namespace WaveFunctionCollapse
             List<Point3d> allTiles = new List<Point3d>();
             DA.GetDataList<Point3d>(2, allTiles);
 
+            // tiles SIZE
+            double tileSize = 0;
+            DA.GetData(3, ref tileSize);
+
+            // rotate bool
+            // tiles SIZE
+            bool rotation = false;
+            DA.GetData(4, ref rotation);
+
             float[] weights = GetWeights(tilesA, tilesB, allTiles);
 
             // tiles for patterns from sample
@@ -52,7 +63,7 @@ namespace WaveFunctionCollapse
             var fullTilesForPatterns = new List<Point3d>();
             var emptyTilesForPatterns = new List<Point3d>();
 
-            PatternFromSampleExtractor patternsToGenerate = new PatternFromSampleExtractor(tilesA, tilesB, allTiles, weights, 2);
+            PatternFromSampleExtractor patternsToGenerate = new PatternFromSampleExtractor(tilesA, tilesB, allTiles, weights, (int)tileSize, rotation);
             var patternsFromSample = patternsToGenerate.Extract();
 
             var result = new PatternFromSampleElement();
@@ -61,6 +72,7 @@ namespace WaveFunctionCollapse
             result.UnitElementsOfType1 = tilesB;
             result.UnitElementsCenters = allTiles;
             result.TilesWeights = weights;
+            result.N = (int)tileSize;
 
             int x = 20, y = 0, z = 0;
 
@@ -68,7 +80,7 @@ namespace WaveFunctionCollapse
             for (var i = 0; i < result.Patterns.Count; i++)
             {
                     var pattern = result.Patterns[i];
-                    var instance = pattern.Instantiate(x + i * 6, y, z);
+                    var instance = pattern.Instantiate(x + i * (int)tileSize * 4, y, z);
 
                     halfTilesForPatterns.AddRange(instance[State.HALF_TILE]);
                     fullTilesForPatterns.AddRange(instance[State.FULL_TILE]);

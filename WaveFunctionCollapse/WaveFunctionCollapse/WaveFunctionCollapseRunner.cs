@@ -9,7 +9,7 @@ namespace WaveFunctionCollapse
 {
     public class WaveFunctionCollapseRunner
     {
-        int N = 2;
+        //int N = 2;
         Wave wave;
 
         // Main function in which wave function is being observed
@@ -29,22 +29,42 @@ namespace WaveFunctionCollapse
                 int width = GetNumberofPointsInOneDimension(wavePoints[0].X, wavePoints[wavePoints.Count - 1].X);
                 int height = GetNumberofPointsInOneDimension(wavePoints[0].Y, wavePoints[wavePoints.Count - 1].Y);
 
-                wave = new Wave(width, height, patterns);
+                wave = new Wave(width, height, patterns, N);
 
                 // Start with random seed
-                SeedRandom(width, height, patterns);
+                SeedRandom(wave.superpositions.GetLength(0), wave.superpositions.GetLength(1), patterns);
                 AddCurrentFrameToHistory(timelapse);
 
-                // Break if contracition, otherwise run observations until it is not completaly observed
+                // Break if contradiction, otherwise run observations until it is not completaly observed
                 while (!wave.IsCollapsed())
                 {
                     if (wave.Contradiction()) { break; }
 
-                    var observed = wave.Observe();
-                    wave.PropagateByUpdatingSuperposition(observed.Item1, observed.Item2, observed.Item3);
+                    //Ponizej to dopisane
+                    var waveCopy = new Wave(width, height, patterns, N);
+                    waveCopy = wave;
+                    var observedCopy = waveCopy.Observe();
+                    waveCopy.PropagateByUpdatingSuperposition(observedCopy.Item1, observedCopy.Item2, observedCopy.Item3);
 
-                    AddCurrentFrameToHistory(timelapse);
-                    steps++;
+                    if (waveCopy.Contradiction())
+                    {
+                        wave.BlockPattern(observedCopy.Item1, observedCopy.Item2, observedCopy.Item3);
+                        continue;
+
+                    }
+                    else
+                    {
+                        wave.PropagateByUpdatingSuperposition(observedCopy.Item1, observedCopy.Item2, observedCopy.Item3);
+
+                        AddCurrentFrameToHistory(timelapse);
+                        steps++;
+                    }
+                    // To było wczesniej:
+                    // var observed = wave.Observe();
+                    // wave.PropagateByUpdatingSuperposition(observed.Item1, observed.Item2, observed.Item3);
+
+                    //AddCurrentFrameToHistory(timelapse);
+                    // steps++;
                 }
 
                 if (wave.Contradiction())

@@ -12,28 +12,30 @@ namespace WaveFunctionCollapse
         public Superposition[,] superpositions;
         public Pattern[,] waveCollapse;
         readonly List<Pattern> patterns;
+        readonly int patternSize;
 
         public List<Point3d> half;
         public List<Point3d> full;
         public List<Point3d> empty;
 
-        public Wave(int width, int height, List<Pattern> patterns)
+        public Wave(int width, int height, List<Pattern> patterns, int patternSize)
         {
             this.width = width;
             this.height = height;
             this.patterns = patterns;
+            this.patternSize = patternSize;
 
-            superpositions = new Superposition[width, height];
+            superpositions = new Superposition[width/ (patternSize-1), height / (patternSize - 1)];
 
-            for (int i = 0; i < width; i++)
+            for (int i = 0; i < superpositions.GetLength(0); i++)
             {
-                for (int j = 0; j < height; j++)
+                for (int j = 0; j < superpositions.GetLength(1); j++)
                 {
                     superpositions[i, j] = new Superposition(patterns);
                 }
             }
 
-            waveCollapse = new Pattern[width, height];
+            waveCollapse = new Pattern[superpositions.GetLength(0), superpositions.GetLength(1)];
         }
 
         // Check the superposition for each place in wave in order to check how many patterns are possible to be placed in each location
@@ -243,6 +245,20 @@ namespace WaveFunctionCollapse
 
                 }
             }
+        }
+
+        public void BlockPattern(int xPatternCoordOnWave, int yPatternCoordonWave, Pattern placedPatternOnWave)
+        {
+            // Find index in list of patterns of the pattern to block
+            var patternIndex = patterns.FindIndex(c => c == placedPatternOnWave);
+
+            // Assign null to pattern (not sure if that's needed)
+            waveCollapse[xPatternCoordOnWave, yPatternCoordonWave] = null;
+
+            // Get existing superposition
+            var currentSuperposition = superpositions[xPatternCoordOnWave, yPatternCoordonWave];
+            currentSuperposition.coefficients[patternIndex] = false;
+
         }
 
 
