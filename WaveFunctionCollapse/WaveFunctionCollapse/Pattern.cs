@@ -44,6 +44,13 @@ namespace WaveFunctionCollapse
             {
                 for (int y = -oneSideNeighboursInOneDimension; y <= oneSideNeighboursInOneDimension; y++)
                 {
+                    // Make sure that we're checking only edges.
+                    if (x != -oneSideNeighboursInOneDimension && x != oneSideNeighboursInOneDimension && y != -oneSideNeighboursInOneDimension && y != oneSideNeighboursInOneDimension)
+                    {
+                        // Candidate pattern inside, so don't check it.
+                        continue;
+                    }
+
                     overlapsSuperpositions[x + oneSideNeighboursInOneDimension, y + oneSideNeighboursInOneDimension] = GetLocalSuperposition(x, y, patternsFromSample);
                 }
             }

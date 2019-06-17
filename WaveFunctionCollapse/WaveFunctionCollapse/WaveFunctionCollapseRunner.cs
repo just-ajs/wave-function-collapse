@@ -26,13 +26,16 @@ namespace WaveFunctionCollapse
                 int steps = 0;
                 
                 // Get size of wave
-                int width = GetNumberofPointsInOneDimension(wavePoints[0].X, wavePoints[wavePoints.Count - 1].X);
-                int height = GetNumberofPointsInOneDimension(wavePoints[0].Y, wavePoints[wavePoints.Count - 1].Y);
+                int initialWidth = GetNumberofPointsInOneDimension(wavePoints[0].X, wavePoints[wavePoints.Count - 1].X);
+                int initialHeight = GetNumberofPointsInOneDimension(wavePoints[0].Y, wavePoints[wavePoints.Count - 1].Y);
+
+                int width = initialWidth / (N - 1);
+                int height = initialHeight / (N - 1);
 
                 wave = new Wave(width, height, patterns, N);
 
                 // Start with random seed
-                SeedRandom(wave.superpositions.GetLength(0), wave.superpositions.GetLength(1), patterns);
+                SeedRandom(width, height, patterns);
                 AddCurrentFrameToHistory(timelapse);
 
                 // Break if contradiction, otherwise run observations until it is not completaly observed

@@ -25,7 +25,7 @@ namespace WaveFunctionCollapse
             this.patterns = patterns;
             this.patternSize = patternSize;
 
-            superpositions = new Superposition[width/ (patternSize-1), height / (patternSize - 1)];
+            superpositions = new Superposition[width, height];
 
             for (int i = 0; i < superpositions.GetLength(0); i++)
             {
