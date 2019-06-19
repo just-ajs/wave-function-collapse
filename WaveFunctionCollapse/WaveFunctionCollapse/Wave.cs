@@ -232,9 +232,34 @@ namespace WaveFunctionCollapse
                 for (int j = 0; j < patternSuperpositionsYSize; j++)
                 {
                     if (i == (patternSuperpositionsXSize - 1) / 2 && j == (patternSuperpositionsYSize - 1) / 2) continue;
-
+                    
+                    // Tutaj trzeba zmienic indeksy zeby były dobre, wiec np jak jest -2 to z  x=8 musi zmienic na x=7
                     int superpositionIndexX = xPatternCoordOnWave - ((patternSuperpositionsXSize - 1) / 2) + i;
                     int superpositionIndexY = yPatternCoordonWave - ((patternSuperpositionsYSize - 1) / 2) + j;
+
+                    // nowe rzeczy below
+                    if (superpositionIndexX > xPatternCoordOnWave)
+                    {
+                        superpositionIndexX = superpositionIndexX - (patternSize - 2);
+                    } 
+                    else if (superpositionIndexX < xPatternCoordOnWave)
+                    {
+                        superpositionIndexX = superpositionIndexX + (patternSize - 2);
+
+                    }
+
+
+                    if (superpositionIndexY > yPatternCoordonWave)
+                    {
+                        superpositionIndexY = superpositionIndexY - (patternSize - 2);
+                    }
+                    else if (superpositionIndexY < yPatternCoordonWave)
+                    {
+                        superpositionIndexY = superpositionIndexY + (patternSize - 2);
+
+                    }
+
+                    //   <---- do tutaj
 
                     if (superpositionIndexX < 0 || superpositionIndexY < 0 || superpositionIndexX > superpositions.GetLength(0) - 1 || superpositionIndexY > superpositions.GetLength(1) - 1) continue;
 
