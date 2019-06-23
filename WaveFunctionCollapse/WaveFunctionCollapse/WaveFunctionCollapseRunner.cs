@@ -9,17 +9,17 @@ namespace WaveFunctionCollapse
 {
     public class WaveFunctionCollapseRunner
     {
-        int N = 2;
         Wave wave;
 
         // Main function in which wave function is being observed
-        public WaveCollapseHistory Run(List<Pattern> patterns, IEnumerable<Point3d> unitElementsOfTypeA, IEnumerable<Point3d> unitElementsOfTypeB, IEnumerable<Point3d> areaCentres,
+        public WaveCollapseHistory Run(List<Pattern> patterns, IEnumerable<Point3d> unitElementsOfTypeA, 
+            IEnumerable<Point3d> unitElementsOfTypeB, IEnumerable<Point3d> areaCentres,
             int N, List<Point3d> wavePoints, float[] weights)
         {
             WaveCollapseHistory timelapse = new WaveCollapseHistory(); ;
 
             var guardCounter = 0;
-            while (guardCounter < 15)
+            while (guardCounter < 200)
             {
                 guardCounter++;
                 bool collapsedObservations = false;
@@ -29,7 +29,7 @@ namespace WaveFunctionCollapse
                 int width = GetNumberofPointsInOneDimension(wavePoints[0].X, wavePoints[wavePoints.Count - 1].X);
                 int height = GetNumberofPointsInOneDimension(wavePoints[0].Y, wavePoints[wavePoints.Count - 1].Y);
 
-                wave = new Wave(width, height, patterns);
+                wave = new Wave(width, height, patterns, N);
 
                 // Start with random seed
                 SeedRandom(width, height, patterns);

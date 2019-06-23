@@ -25,8 +25,13 @@ namespace WaveFunctionCollapse
         // Each superposition has true value for possible pattern and false for others
         public void InitializeListOfOverlappingNeighbours(List<Pattern> patternsFromSample)
         {
+            // How many overlapping positions
             int offsetsToConsider = (int)Math.Pow((2 * (patternSize - 1) + 1), 2);
+
+            // Shape overlapping board to square board
             var overlapDimension = (int)Math.Sqrt(offsetsToConsider);
+
+            // Create superposition object for overlapping board
             overlapsSuperpositions = new Superposition[overlapDimension, overlapDimension];
 
             var oneSideNeighboursInOneDimension = ((overlapDimension - 1) / 2);
@@ -80,9 +85,9 @@ namespace WaveFunctionCollapse
         // existing pattern, it will compare right bottom of existing with left top of new pattern. 
         private bool Overlaps(int x, int y, Pattern other)
         {
-            for (int i = x; i < x + 2; i++)
+            for (int i = x; i < x + patternSize; i++)
             {
-                for (int j = y; j < y + 2; j++)
+                for (int j = y; j < y + patternSize; j++)
                 {
                     if (i < 0 || j < 0) continue;
                     if (i > this.MiniTile.GetLength(0) - 1 || j > this.MiniTile.GetLength(1) - 1) continue;
@@ -90,14 +95,14 @@ namespace WaveFunctionCollapse
 
                     int xFromCheckTile = 0, yFromCheckTile = 0;
 
-                    // set x and y of pattern that can be possibly a neighbout
-                    if (x < 0) xFromCheckTile = i + 1;
+                    // set x and y of pattern that can be possibly a neighbour
+                    if (x < 0) xFromCheckTile = -x + i;
                     else if (x == 0) xFromCheckTile = i;
-                    else if (x > 0) xFromCheckTile = i - 1;
+                    else if (x > 0) xFromCheckTile = i - x;
 
-                    if (y < 0) yFromCheckTile = j + 1;
+                    if (y < 0) yFromCheckTile = -y + j;
                     else if (y == 0) yFromCheckTile = j;
-                    else if (y > 0) yFromCheckTile = j - 1;
+                    else if (y > 0) yFromCheckTile = j - y;
 
                     // continue if values are outside of array
                     if (xFromCheckTile < 0 || yFromCheckTile < 0) continue;

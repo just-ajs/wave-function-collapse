@@ -35,7 +35,6 @@ namespace WaveFunctionCollapse
             pManager.AddNumberParameter("Pattern Count", "", "", GH_ParamAccess.list);
         }
 
-        int N = 2;
         // INSIDE
         protected override void SolveInstance(IGH_DataAccess DA)
         {
@@ -51,6 +50,7 @@ namespace WaveFunctionCollapse
             var tilesB = gh_patterns.Value.UnitElementsOfType1;
             var allTiles = gh_patterns.Value.UnitElementsCenters;
             var weights = gh_patterns.Value.TilesWeights;
+            var N = gh_patterns.Value.N;
 
             // RUN WAVEFUNCION COLLAPSE
             var wfc = new WaveFunctionCollapseRunner();

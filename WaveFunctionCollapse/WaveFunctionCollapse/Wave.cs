@@ -12,16 +12,18 @@ namespace WaveFunctionCollapse
         public Superposition[,] superpositions;
         public Pattern[,] waveCollapse;
         readonly List<Pattern> patterns;
+        readonly int patternSize;
 
         public List<Point3d> half;
         public List<Point3d> full;
         public List<Point3d> empty;
 
-        public Wave(int width, int height, List<Pattern> patterns)
+        public Wave(int width, int height, List<Pattern> patterns, int patternSize)
         {
             this.width = width;
             this.height = height;
             this.patterns = patterns;
+            this.patternSize = patternSize;
 
             superpositions = new Superposition[width, height];
 

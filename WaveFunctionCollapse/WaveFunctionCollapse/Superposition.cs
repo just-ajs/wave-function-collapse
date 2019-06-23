@@ -8,11 +8,14 @@ namespace WaveFunctionCollapse
     public class Superposition
     {
         public bool[] coefficients;
+        readonly List<Pattern> patternFromSample;
 
         public Superposition(List<Pattern> patternFromSample)
         {
             coefficients = new bool[patternFromSample.Count];
             for (int i = 0; i < coefficients.Length; i++) { coefficients[i] = true; }
+
+            this.patternFromSample = patternFromSample;
         }
 
         public void MakeAllFalseBesideOnePattern (int patternIndex)
@@ -32,7 +35,30 @@ namespace WaveFunctionCollapse
         }
 
         // The more possible patterns the highest entropy
-        public int Entropy {
+        public double Entropy {
+
+            // New entropy implementation: Entropy Primer
+            get
+            {
+                double ent = 0;
+                int patternCount = 0;
+
+                for (int i = 0; i < coefficients.Length; i++)
+                {
+                    if (coefficients[i])
+                    {
+                        ent += -((patternFromSample[i].Weight) * Math.Log(patternFromSample[i].Weight));
+                        patternCount++;
+                    }
+                }
+
+                if (patternCount == 0) return -1;
+                else if (patternCount == 1) return 0;
+                else return ent;
+            }
+
+            /* 
+            Entropy 0.1: Summs all possible patterns
             get
             {
                 var ent = 0;
@@ -42,6 +68,7 @@ namespace WaveFunctionCollapse
                 }
                 return ent - 1;
             }
+            */
         }
 
 
