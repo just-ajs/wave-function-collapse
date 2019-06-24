@@ -11,6 +11,8 @@ namespace WaveFunctionCollapse
     {
         Wave wave;
 
+        private static Random random = new Random();
+
         // Main function in which wave function is being observed
         public WaveCollapseHistory Run(List<Pattern> patterns, IEnumerable<Point3d> unitElementsOfTypeA, 
             IEnumerable<Point3d> unitElementsOfTypeB, IEnumerable<Point3d> areaCentres,
@@ -35,6 +37,7 @@ namespace WaveFunctionCollapse
                 SeedRandom(width, height, patterns);
                 AddCurrentFrameToHistory(timelapse);
 
+                var testKeyList = wave.MakeSortedKeyList();
                 // Break if contracition, otherwise run observations until it is not completaly observed
                 while (!wave.IsCollapsed())
                 {
@@ -63,11 +66,8 @@ namespace WaveFunctionCollapse
 
         public void SeedRandom(int width, int height, List<Pattern> patterns)
         {
-            Random xRand = new Random();
-            Random yRand = new Random();
-
-            var x = xRand.Next(width);
-            var y = yRand.Next(height);
+            var x = random.Next(width);
+            var y = random.Next(height);
 
             var seedPattern = GetSeedPattern(x, y, patterns);
             wave.PropagateByUpdatingSuperposition(x, y, seedPattern);
@@ -133,7 +133,6 @@ namespace WaveFunctionCollapse
 
             if (patternsWithHeighestWeight.Count > 1)
             {
-                Random random = new Random();
                 int randomNumber = random.Next(patternsWithHeighestWeight.Count - 1);
 
                 return patternsWithHeighestWeight[randomNumber];

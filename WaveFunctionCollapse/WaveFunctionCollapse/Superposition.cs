@@ -7,7 +7,12 @@ namespace WaveFunctionCollapse
 {
     public class Superposition
     {
+        private static Random random = new Random();
+
         public bool[] coefficients;
+        // The more possible patterns the highest entropy
+        public double Entropy { get; private set; }
+
         readonly List<Pattern> patternFromSample;
 
         public Superposition(List<Pattern> patternFromSample)
@@ -16,13 +21,15 @@ namespace WaveFunctionCollapse
             for (int i = 0; i < coefficients.Length; i++) { coefficients[i] = true; }
 
             this.patternFromSample = patternFromSample;
+
+            CalculateEntropy();
         }
 
         public void MakeAllFalseBesideOnePattern (int patternIndex)
         {
-            for (int i = 0; i < coefficients.Length; i++) { coefficients[i] = false; }
-
+            coefficients = new bool[patternFromSample.Count];
             coefficients[patternIndex] = true;
+            Entropy = 0;
         }
 
         // If another superposition has false value - set also false to this one
@@ -30,45 +37,31 @@ namespace WaveFunctionCollapse
         {
             for (int i = 0; i < coefficients.Length; i++)
             {
-                if (coefficients[i] == true && superpositionToOVerlay.coefficients[i] == false) coefficients[i] = false;
+                if (coefficients[i] == true && superpositionToOVerlay.coefficients[i] == false)
+                {
+                    coefficients[i] = false;
+                }
             }
+            CalculateEntropy();
         }
 
-        // The more possible patterns the highest entropy
-        public double Entropy {
+        public void CalculateEntropy()
+        {
+            double ent = 0;
+            int patternCount = 0;
 
-            // New entropy implementation: Entropy Primer
-            get
+            for (int i = 0; i < coefficients.Length; i++)
             {
-                double ent = 0;
-                int patternCount = 0;
-
-                for (int i = 0; i < coefficients.Length; i++)
+                if (coefficients[i])
                 {
-                    if (coefficients[i])
-                    {
-                        ent += -((patternFromSample[i].Weight) * Math.Log(patternFromSample[i].Weight));
-                        patternCount++;
-                    }
+                    ent += ((patternFromSample[i].Weight) * Math.Log(patternFromSample[i].Weight));
+                    patternCount++;
                 }
-
-                if (patternCount == 0) return -1;
-                else if (patternCount == 1) return 0;
-                else return ent;
             }
-
-            /* 
-            Entropy 0.1: Summs all possible patterns
-            get
-            {
-                var ent = 0;
-                for (int i = 0; i < coefficients.Length; i++)
-                {
-                    if (coefficients[i]) ent++;
-                }
-                return ent - 1;
-            }
-            */
+            double noise = AddNoise();
+            if (patternCount == 0) { Entropy = -1; }
+            else if (patternCount == 1) { Entropy = 0; }
+            else Entropy = ent + noise;
         }
 
 
@@ -92,10 +85,12 @@ namespace WaveFunctionCollapse
 
             float currentSum = 0;
 
+            if (candidates.Count == 0) throw new ArgumentException("No patterns left.");
+
             for (int i = 0; i < candidates.Count; i++)
             {
                 currentSum += candidates[i].Weight;
-                
+  
                 if (currentSum >= randomPoint)
                 {
                     selected = candidates[i];
@@ -106,9 +101,14 @@ namespace WaveFunctionCollapse
             return selected;
         }
 
+        double AddNoise()
+        {
+            double noise = 1E-6 * random.NextDouble();
+            return noise;
+        }
+
         public double GetRandomNumber(double minimum, double maximum)
         {
-            Random random = new Random();
             return random.NextDouble() * (maximum - minimum) + minimum;
         }
 

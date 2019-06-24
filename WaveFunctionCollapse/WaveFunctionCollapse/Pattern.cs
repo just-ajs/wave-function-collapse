@@ -10,13 +10,16 @@ namespace WaveFunctionCollapse
         private int patternSize;
         public Superposition[,] overlapsSuperpositions;
         float[] overalWeights;
-        
+        public float Weight { get; private set; }
+
         // Create a new pattern from provided states, weights and size of pattern
         public Pattern(State[,] miniTile, float[] overalWeights, int N)
         {
             MiniTile = miniTile;
             patternSize = N;
             this.overalWeights = overalWeights;
+
+            CalculateWeight();
         }
 
         public State[,] MiniTile { get; set; }
@@ -77,6 +80,8 @@ namespace WaveFunctionCollapse
                     superpositionForXY.coefficients[i] = false;
                 }
             }
+
+            superpositionForXY.CalculateEntropy();
             return superpositionForXY;
         }
 
@@ -120,24 +125,20 @@ namespace WaveFunctionCollapse
             return true;
         }
 
-
         // Calculate weights of the pattern based on calculated weights of each tile type
-        public float Weight
+        private void CalculateWeight()
         {
-            get
+            float weight = 0;
+            for (int i = 0; i < MiniTile.GetLength(0); i++)
             {
-                float weight = 0;
-                for (int i = 0; i < MiniTile.GetLength(0); i++)
+                for (int j = 0; j < MiniTile.GetLength(1); j++)
                 {
-                    for (int j = 0; j < MiniTile.GetLength(1); j++)
-                    {
-                        if (MiniTile[i, j] == State.HALF_TILE) weight += overalWeights[0];
-                        else if (MiniTile[i, j] == State.FULL_TILE) weight += overalWeights[1];
-                        else if (MiniTile[i, j] == State.EMPTY) weight += overalWeights[2];
-                    }
+                    if (MiniTile[i, j] == State.HALF_TILE) weight += overalWeights[0];
+                    else if (MiniTile[i, j] == State.FULL_TILE) weight += overalWeights[1];
+                    else if (MiniTile[i, j] == State.EMPTY) weight += overalWeights[2];
                 }
-                return weight;
             }
+            Weight = weight;
         }
 
         // Rotate 2x2 array by 90 degrees

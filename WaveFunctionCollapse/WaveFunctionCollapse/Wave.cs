@@ -18,6 +18,8 @@ namespace WaveFunctionCollapse
         public List<Point3d> full;
         public List<Point3d> empty;
 
+        private static Random random = new Random();
+
         public Wave(int width, int height, List<Pattern> patterns, int patternSize)
         {
             this.width = width;
@@ -220,7 +222,7 @@ namespace WaveFunctionCollapse
             currentSuperposition.MakeAllFalseBesideOnePattern(patternIndex);
 
             // initialize list of overlapping neigbours that could be next tile
-            placedPatternOnWave.InitializeListOfOverlappingNeighbours(patterns);
+            placedPatternOnWave.  InitializeListOfOverlappingNeighbours(patterns);
 
             // setup indices of superpositions on the wave that is influenced by placed pattern
             int patternSuperpositionsXSize = placedPatternOnWave.overlapsSuperpositions.GetLength(0); // 3
@@ -251,7 +253,7 @@ namespace WaveFunctionCollapse
         // In the wave find lowest entropy in order to place there a pattern
         Tuple<int, int> FindLowestEntropy()
         {
-            int lowEntropy = this.LowestEntropy();
+            double lowEntropy = this.LowestEntropy();
 
             if (lowEntropy == 0)
             {
@@ -283,10 +285,7 @@ namespace WaveFunctionCollapse
         public Superposition GetRandomCellWithLowestEntropy()
         {
             var candidates = GetCellsWithLowestEntropy();
-
-            System.Random random = new System.Random();
             int randomNumber = random.Next(candidates.Count - 1);
-
             return candidates[randomNumber];
         }
 
@@ -327,9 +326,9 @@ namespace WaveFunctionCollapse
         }
 
         // Lowest entropy is the value of possible patterns that can be placed in a cell with lowest possible patterns count
-        public int LowestEntropy()
+        public double LowestEntropy()
         {
-            int lowest = 1000;
+            double lowest = 1000;
 
             for (int i = 0; i < width; i++)
             {
@@ -350,6 +349,26 @@ namespace WaveFunctionCollapse
         public Pattern PickRandomPatternForGivenSuperposition(int nextPatternToSeedX, int nextPatternToSeedY)
         {
             return superpositions[nextPatternToSeedX, nextPatternToSeedY].rouletteWheelSelections(patterns);
+        }
+
+        public SortedList<double, Vector2d> MakeSortedKeyList()
+        {
+            // Create a new sorted list of doubles (entropies) and vectors (x and y coordinates od wave)
+            // with doubles as keys
+            SortedList<double, Vector2d> list = new SortedList<double, Vector2d>();
+
+            // Assign entropies and x,y
+
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    double entropy = superpositions[i, j].Entropy;
+                    Vector2d coordinates = new Vector2d(i, j);
+                    list.Add(entropy, coordinates);
+                }
+            }
+            return list;
         }
 
     }

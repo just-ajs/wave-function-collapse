@@ -8,9 +8,8 @@ namespace WaveFunctionCollapse
 {
     public class RandomPattern : GH_Component
     {
-        /// <summary>
-        /// Initializes a new instance of the RandomPattern class.
-        /// </summary>
+        private static Random random = new Random();
+
         public RandomPattern()
           : base("RandomPattern", "Nickname", "Description", "WFC", "Wave Fucntion Collapse")
         {
@@ -139,8 +138,6 @@ namespace WaveFunctionCollapse
 
         void SetRandomVectorLists(int width, int height, List<Vector3d> half, List<Vector3d> full, List<Vector3d> empty, List<double> pointCount)
         {
-            Random random = new Random();
-
             double sum = pointCount[0] + pointCount[1] + pointCount[2];
 
             for (int i = 0; i < width; i++)
@@ -175,7 +172,6 @@ namespace WaveFunctionCollapse
             {
                 for (int j = 0; j < height; j++)
                 {
-                    Random random = new Random();
                     int randomNumber = random.Next(0, 1);
 
                     if (randomNumber < 0.33) { randomStates[i, j] = State.EMPTY; }
