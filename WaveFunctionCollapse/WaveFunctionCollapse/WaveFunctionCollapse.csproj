@@ -59,9 +59,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="WaveOutputs.cs" />
     <Compile Include="Components\Pattern From Sample\OverlappingModel.cs" />
     <Compile Include="Components\EvaluateProportionsComponent.cs" />
     <Compile Include="Components\Pattern From Sample\SimpleTiledModel.cs" />
+    <Compile Include="Components\ExportWFC.cs" />
+    <Compile Include="Components\WaveFunctionCollapseMultipleComponent.cs" />
     <Compile Include="PatternFromSample.cs" />
     <Compile Include="Components\RandomPatternComponent.cs" />
     <Compile Include="TileSuperposition.cs" />
@@ -120,5 +123,6 @@
     </StartArguments>
     <StartAction>Program</StartAction>
     <WarningLevel>0</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 </Project>

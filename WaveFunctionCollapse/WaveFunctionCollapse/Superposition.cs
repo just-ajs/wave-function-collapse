@@ -5,7 +5,7 @@ using System.Text;
 
 namespace WaveFunctionCollapse
 {
-    public class Superposition
+    public class Superposition : ICloneable
     {
         private static Random random = new Random();
 
@@ -17,15 +17,31 @@ namespace WaveFunctionCollapse
 
         public Superposition(List<Pattern> patternFromSample)
         {
-            coefficients = new bool[patternFromSample.Count];
-            for (int i = 0; i < coefficients.Length; i++) { coefficients[i] = true; }
-
             this.patternFromSample = patternFromSample;
+
+            coefficients = new bool[patternFromSample.Count];
+            for (int i = 0; i < coefficients.Length; i++)
+            {
+                coefficients[i] = true;
+            }
 
             CalculateEntropy();
         }
 
-        public void MakeAllFalseBesideOnePattern (int patternIndex)
+        public Superposition(Superposition superposition)
+        {
+            this.patternFromSample = superposition.patternFromSample;
+
+            // Copy coefficients.
+            for (var i = 0; i < superposition.coefficients.Length; i++)
+            {
+                this.coefficients[i] = superposition.coefficients[i];
+            }
+
+            this.CalculateEntropy();
+        }
+
+        public void MakeAllFalseBesideOnePattern(int patternIndex)
         {
             coefficients = new bool[patternFromSample.Count];
             coefficients[patternIndex] = true;
@@ -33,7 +49,7 @@ namespace WaveFunctionCollapse
         }
 
         // If another superposition has false value - set also false to this one
-        public void OverlayWithAnother (Superposition superpositionToOVerlay)
+        public void OverlayWithAnother(Superposition superpositionToOVerlay)
         {
             for (int i = 0; i < coefficients.Length; i++)
             {
@@ -42,8 +58,28 @@ namespace WaveFunctionCollapse
                     coefficients[i] = false;
                 }
             }
+
             CalculateEntropy();
         }
+
+        // Check the entropy after overlaying without changing the values
+        public int CheckPossiblePatternsCount (Superposition superpositionToOverlay)
+        {
+            var fakeCoefficients = new bool[coefficients.Length];
+            int patternCount = 0;
+
+            for (int i = 0; i < coefficients.Length; i++)
+            {
+                if (coefficients[i] == true && superpositionToOverlay.coefficients[i] == true)
+                {
+                    fakeCoefficients[i] = true;
+                    patternCount++;
+                }
+            }
+
+            return patternCount;
+        }
+
 
         public void CalculateEntropy()
         {
@@ -90,7 +126,7 @@ namespace WaveFunctionCollapse
             for (int i = 0; i < candidates.Count; i++)
             {
                 currentSum += candidates[i].Weight;
-  
+
                 if (currentSum >= randomPoint)
                 {
                     selected = candidates[i];
@@ -101,7 +137,7 @@ namespace WaveFunctionCollapse
             return selected;
         }
 
-        double AddNoise()
+        public double AddNoise()
         {
             double noise = 1E-6 * random.NextDouble();
             return noise;
@@ -138,6 +174,11 @@ namespace WaveFunctionCollapse
         public override string ToString()
         {
             return Entropy.ToString();
+        }
+
+        public object Clone()
+        {
+            return new Superposition(this);
         }
     }
 }

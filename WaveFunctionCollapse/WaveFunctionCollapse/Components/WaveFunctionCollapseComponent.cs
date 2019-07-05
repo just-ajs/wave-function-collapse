@@ -25,6 +25,7 @@ namespace WaveFunctionCollapse
         {
             pManager.AddParameter(new PatternFromSampleParam());
             pManager.AddPointParameter("Wave", "", "", GH_ParamAccess.list);
+            pManager.AddBooleanParameter("Backtrack", "", "", GH_ParamAccess.item);
         }
 
         // OUTPUT
@@ -33,6 +34,7 @@ namespace WaveFunctionCollapse
             pManager.AddNumberParameter("Number of rotated tiles", "Offsetes count", "", GH_ParamAccess.item);
             pManager.AddParameter(new PatternHistoryParam());
             pManager.AddNumberParameter("Pattern Count", "", "", GH_ParamAccess.list);
+            pManager.AddNumberParameter("Average contradiction value", "", "", GH_ParamAccess.item);
         }
 
         // INSIDE
@@ -45,6 +47,9 @@ namespace WaveFunctionCollapse
             GH_PatternsFromSample gh_patterns = new GH_PatternsFromSample();
             DA.GetData<GH_PatternsFromSample>(0, ref gh_patterns);
 
+            bool backtrack = false;
+            DA.GetData<bool>(2, ref backtrack);
+
             var patterns = gh_patterns.Value.Patterns;
             var tilesA = gh_patterns.Value.UnitElementsOfType0;
             var tilesB = gh_patterns.Value.UnitElementsOfType1;
@@ -54,16 +59,18 @@ namespace WaveFunctionCollapse
 
             // RUN WAVEFUNCION COLLAPSE
             var wfc = new WaveFunctionCollapseRunner();
-            var history = wfc.Run(patterns, tilesA, tilesB, allTiles, N, wavePoints, weights);
+            var history = wfc.Run(patterns, N, wavePoints, weights, backtrack);
             var return_value = new GH_WaveCollapseHistory(history);
 
             var patternsOccurence = wfc.GetPatternCounts();
+            var collapseAverage = wfc.GetAverageCollapseStep();
 
             if (true)
             {
                 DA.SetData(0, patterns.Count);
                 DA.SetData(1, return_value);
                 DA.SetDataList(2, patternsOccurence);
+                DA.SetData(3, collapseAverage);
             }
             else
             {

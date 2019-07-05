@@ -5,12 +5,14 @@ using System.Text;
 
 namespace WaveFunctionCollapse
 {
-    public class Pattern
+    public class Pattern: ICloneable
     {
         private int patternSize;
         public Superposition[,] overlapsSuperpositions;
         float[] overalWeights;
+
         public float Weight { get; private set; }
+        public State[,] MiniTile { get; set; }
 
         // Create a new pattern from provided states, weights and size of pattern
         public Pattern(State[,] miniTile, float[] overalWeights, int N)
@@ -22,7 +24,19 @@ namespace WaveFunctionCollapse
             CalculateWeight();
         }
 
-        public State[,] MiniTile { get; set; }
+        public Pattern(Pattern pattern)
+        {
+            this.patternSize = pattern.patternSize;
+            for (int i = 0; i < pattern.overlapsSuperpositions.GetLength(0); i++)
+            {
+                for (int j = 0; j < pattern.overlapsSuperpositions.GetLength(0); j++)
+                {
+                    this.overlapsSuperpositions[i, j] = (Superposition)pattern.overlapsSuperpositions[i, j].Clone();
+                }
+            }
+            
+            this.MiniTile = (State[,])pattern.MiniTile.Clone();
+        }
 
         // Create a list of a superpositions for each possible overlapping neighbour for each pattern.
         // Each superposition has true value for possible pattern and false for others
@@ -229,6 +243,11 @@ namespace WaveFunctionCollapse
             }
 
             return sb.ToString();
+        }
+
+        public object Clone()
+        {
+            return new Pattern(this);
         }
     }
 }

@@ -10,26 +10,26 @@ namespace WaveFunctionCollapse
     public class WaveFunctionCollapseRunner
     {
         Wave wave;
-
         private static Random random = new Random();
 
-        // Main function in which wave function is being observed
-        public WaveCollapseHistory Run(List<Pattern> patterns, IEnumerable<Point3d> unitElementsOfTypeA, 
-            IEnumerable<Point3d> unitElementsOfTypeB, IEnumerable<Point3d> areaCentres,
-            int N, List<Point3d> wavePoints, float[] weights)
-        {
-            WaveCollapseHistory timelapse = new WaveCollapseHistory(); ;
+        int iterations = 200;
+        int averageCollapseStep = 0;
 
-            var guardCounter = 0;
-            while (guardCounter < 200)
+        public WaveCollapseHistory Run(List<Pattern> patterns, int N, List<Point3d> wavePoints, float[] weights, bool backtrack)
+        {
+            WaveCollapseHistory timelapse = new WaveCollapseHistory();
+
+            int width = GetNumberofPointsInOneDimension(wavePoints[0].X, wavePoints[wavePoints.Count - 1].X);
+            int height = GetNumberofPointsInOneDimension(wavePoints[0].Y, wavePoints[wavePoints.Count - 1].Y);
+
+            var counter = 0;
+            var sumOfCollapsedSteps = 0;
+            //var averageCollapseStep = 0; 
+            
+            while (counter < iterations)
             {
-                guardCounter++;
-                bool collapsedObservations = false;
+                counter++;
                 int steps = 0;
-                
-                // Get size of wave
-                int width = GetNumberofPointsInOneDimension(wavePoints[0].X, wavePoints[wavePoints.Count - 1].X);
-                int height = GetNumberofPointsInOneDimension(wavePoints[0].Y, wavePoints[wavePoints.Count - 1].Y);
 
                 wave = new Wave(width, height, patterns, N);
 
@@ -37,14 +37,46 @@ namespace WaveFunctionCollapse
                 SeedRandom(width, height, patterns);
                 AddCurrentFrameToHistory(timelapse);
 
-                var testKeyList = wave.MakeSortedKeyList();
                 // Break if contracition, otherwise run observations until it is not completaly observed
                 while (!wave.IsCollapsed())
                 {
                     if (wave.Contradiction()) { break; }
 
+                    // Backtracking: repeat the step if contradiction
                     var observed = wave.Observe();
-                    wave.PropagateByUpdatingSuperposition(observed.Item1, observed.Item2, observed.Item3);
+
+                    if (backtrack)
+                    {
+                        var canPropagate = wave.CheckIfPropagateWithoutContradiction(observed.Item1, observed.Item2, observed.Item3);
+                        int repeatedObservations = 0;
+
+                        while (!canPropagate)
+                        {
+                            observed = wave.Observe();
+                            canPropagate = wave.CheckIfPropagateWithoutContradiction(observed.Item1, observed.Item2, observed.Item3);
+                            repeatedObservations++;
+
+                            if (repeatedObservations > (int)(patterns.Count / 4))
+                            {
+                                break;
+                            }
+                        }
+
+                        wave.PropagateByUpdatingSuperposition(observed.Item1, observed.Item2, observed.Item3);
+                    }
+                    else
+                    {
+                        // WORKING VERSION WITHOUT BACKTRACKING:
+                        observed = wave.Observe();
+                        try
+                        {
+                            wave.PropagateByUpdatingSuperposition(observed.Item1, observed.Item2, observed.Item3);
+                        }
+                        catch (DataMisalignedException ex)
+                        {
+                            break;
+                        }
+                    }
 
                     AddCurrentFrameToHistory(timelapse);
                     steps++;
@@ -52,17 +84,28 @@ namespace WaveFunctionCollapse
 
                 if (wave.Contradiction())
                 {
+                    double percentage = steps / (width * height * 1.0);
+                    System.Diagnostics.Debug.WriteLine("Contradiction on " + steps + " th step of " + width * height + 
+                        ", which is " + percentage + " of the whole wave");
+
+                    sumOfCollapsedSteps += steps;
+
                     timelapse.Clear();
                     continue;
                 }
                 else
                 {
+                    averageCollapseStep = sumOfCollapsedSteps / counter;
+                    System.Diagnostics.Debug.WriteLine("Average collapse step is: " + averageCollapseStep + " for " + width*height + " steps");
                     break;
                 }
-
             }
+
+            averageCollapseStep = sumOfCollapsedSteps / counter;
+            System.Diagnostics.Debug.WriteLine("Average collapse step is: " + averageCollapseStep + " for " + width * height + " steps");
             return timelapse;
         }
+
 
         public void SeedRandom(int width, int height, List<Pattern> patterns)
         {
@@ -71,6 +114,11 @@ namespace WaveFunctionCollapse
 
             var seedPattern = GetSeedPattern(x, y, patterns);
             wave.PropagateByUpdatingSuperposition(x, y, seedPattern);
+        }
+
+        public int GetAverageCollapseStep()
+        {
+            return averageCollapseStep;
         }
 
         public int[] GetPatternCounts()

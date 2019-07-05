@@ -37,6 +37,35 @@ namespace WaveFunctionCollapse
         }
     }
 
+    // Type that passes all steps of wave function observations
+    public class GH_WaveCollapseResults : GH_Goo<IWaveCollapseOutputs>
+    {
+        public GH_WaveCollapseResults() { Value = new WaveCollapseOutputs(); }
+        public GH_WaveCollapseResults(WaveCollapseOutputs native) { Value = native; }
+
+        public override bool IsValid => true;
+
+        public override string TypeName => "WaveCollapseResults";
+
+        public override string TypeDescription => "Wave Collapse Algorithm dataset of outputs";
+
+        public override bool CastFrom(object source)
+        {
+            return base.CastFrom(source);
+        }
+
+        public override IGH_Goo Duplicate()
+        {
+            return new GH_WaveCollapseResults();
+        }
+
+        public override string ToString()
+        {
+            return $"Dataset object containing {Value.Elements.Count} elements";
+        }
+    }
+
+
     // Type that passes patterns from provided sample
     public class GH_PatternsFromSample : GH_Goo<PatternFromSampleElement>
     {

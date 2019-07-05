@@ -28,6 +28,29 @@ namespace WaveFunctionCollapse
         }
     }
 
+    public class PatternResultsParam : GH_PersistentParam<GH_WaveCollapseResults>
+    {
+        public PatternResultsParam() : base("Pattern history parameter", "PatternHistoryParam", "This is a pattern history parameter", "WFC", "Parameters") { }
+
+        public override Guid ComponentGuid
+        {
+            get { return new Guid("DF2E27C1-F816-49FE-8B24-F99F71A5EF5F"); }
+       
+        }
+
+        protected override GH_GetterResult Prompt_Plural(ref List<GH_WaveCollapseResults> values)
+        {
+            values = new List<GH_WaveCollapseResults>();
+            return GH_GetterResult.success;
+        }
+
+        protected override GH_GetterResult Prompt_Singular(ref GH_WaveCollapseResults value)
+        {
+            value = new GH_WaveCollapseResults();
+            return GH_GetterResult.success;
+        }
+    }
+
     public class PatternFromSampleParam : GH_PersistentParam<GH_PatternsFromSample>
     {
         public PatternFromSampleParam() : base("Pattern from sample parameter", "PatternFromSampleParam", "This is a pattern from sample parameter", "WFC", "Parameters") { }
