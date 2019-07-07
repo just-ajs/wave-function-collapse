@@ -12,7 +12,7 @@ namespace WaveFunctionCollapse
     {
         public MyComponent2()
           : base("Export wfc", "Export wfc",
-              "Export wfc", "WFC", "Wave Fucntion Collapse")
+              "Export wfc", "WFC", "Data Analysis")
         {
         }
 

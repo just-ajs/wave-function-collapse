@@ -59,18 +59,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Components\Get Data\GetContradictionsData.cs" />
     <Compile Include="WaveOutputs.cs" />
     <Compile Include="Components\Pattern From Sample\OverlappingModel.cs" />
-    <Compile Include="Components\EvaluateProportionsComponent.cs" />
+    <Compile Include="Components\Visualise\EvaluateProportionsComponent.cs" />
     <Compile Include="Components\Pattern From Sample\SimpleTiledModel.cs" />
-    <Compile Include="Components\ExportWFC.cs" />
-    <Compile Include="Components\WaveFunctionCollapseMultipleComponent.cs" />
+    <Compile Include="Components\Get Data\ExportWFC.cs" />
+    <Compile Include="Components\Get Data\WaveFunctionCollapseMultipleComponent.cs" />
     <Compile Include="PatternFromSample.cs" />
-    <Compile Include="Components\RandomPatternComponent.cs" />
+    <Compile Include="Components\Visualise\RandomPatternComponent.cs" />
     <Compile Include="TileSuperposition.cs" />
     <Compile Include="WaveCollapseHistory.cs" />
     <Compile Include="GooTypes.cs" />
-    <Compile Include="Components\VisualiseByHistoryComponent.cs" />
+    <Compile Include="Components\Visualise\VisualiseByHistoryComponent.cs" />
     <Compile Include="Pattern.cs" />
     <Compile Include="Parameters.cs" />
     <Compile Include="Properties\Resources.Designer.cs">

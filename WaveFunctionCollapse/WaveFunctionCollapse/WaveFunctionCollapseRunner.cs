@@ -12,19 +12,18 @@ namespace WaveFunctionCollapse
         Wave wave;
         private static Random random = new Random();
 
-        int iterations = 200;
+        int iterations = 1;
         int averageCollapseStep = 0;
 
-        public WaveCollapseHistory Run(List<Pattern> patterns, int N, List<Point3d> wavePoints, float[] weights, bool backtrack)
+        public WaveCollapseHistory Run(List<Pattern> patterns, int N, int width, int height, float[] weights, bool backtrack)
         {
             WaveCollapseHistory timelapse = new WaveCollapseHistory();
 
-            int width = GetNumberofPointsInOneDimension(wavePoints[0].X, wavePoints[wavePoints.Count - 1].X);
-            int height = GetNumberofPointsInOneDimension(wavePoints[0].Y, wavePoints[wavePoints.Count - 1].Y);
+            //int width = GetNumberofPointsInOneDimension(wavePoints[0].X, wavePoints[wavePoints.Count - 1].X);
+            //int height = GetNumberofPointsInOneDimension(wavePoints[0].Y, wavePoints[wavePoints.Count - 1].Y);
 
             var counter = 0;
             var sumOfCollapsedSteps = 0;
-            //var averageCollapseStep = 0; 
             
             while (counter < iterations)
             {
@@ -42,11 +41,12 @@ namespace WaveFunctionCollapse
                 {
                     if (wave.Contradiction()) { break; }
 
-                    // Backtracking: repeat the step if contradiction
+
                     var observed = wave.Observe();
 
                     if (backtrack)
                     {
+                        // Backtracking: working version with one step backtracking
                         var canPropagate = wave.CheckIfPropagateWithoutContradiction(observed.Item1, observed.Item2, observed.Item3);
                         int repeatedObservations = 0;
 
@@ -66,7 +66,7 @@ namespace WaveFunctionCollapse
                     }
                     else
                     {
-                        // WORKING VERSION WITHOUT BACKTRACKING:
+                        // No backtracking: working version without backtracking
                         observed = wave.Observe();
                         try
                         {
