@@ -10,9 +10,11 @@ namespace WaveFunctionCollapse
         private static Random random = new Random();
 
         public bool[] coefficients;
+        public State state;
+
         // The more possible patterns the highest entropy
         public double Entropy { get; private set; }
-
+        
         readonly List<Pattern> patternFromSample;
 
         public Superposition(List<Pattern> patternFromSample)
@@ -41,11 +43,31 @@ namespace WaveFunctionCollapse
             this.CalculateEntropy();
         }
 
+        public Superposition(Superposition superposition, List<Pattern> patternFromSample)
+        {
+            this.patternFromSample = patternFromSample;
+
+            coefficients = new bool[patternFromSample.Count];
+
+            // Copy coefficients.
+            for (var i = 0; i < superposition.coefficients.Length; i++)
+            {
+                this.coefficients[i] = superposition.coefficients[i];
+                this.state = superposition.state;
+            }
+            CalculateEntropy();
+        }
+
         public void MakeAllFalseBesideOnePattern(int patternIndex)
         {
             coefficients = new bool[patternFromSample.Count];
             coefficients[patternIndex] = true;
+            
+            // Set entropy to zero because pattern is collapsed.
             Entropy = 0;
+
+            // Assign enum value of zero zero. 
+            state = patternFromSample[patternIndex].MiniTile[0, 0];
         }
 
         // If another superposition has false value - set also false to this one
@@ -111,7 +133,7 @@ namespace WaveFunctionCollapse
         }
 
         // Based on weights, if weights is 0.52 there is 52% chance to be picked
-        public Pattern rouletteWheelSelections(List<Pattern> patternFromSample)
+        public Pattern RouletteWheelSelections(List<Pattern> patternFromSample)
         {
             var candidates = GetPatternsFromSuperposition(patternFromSample);
             Pattern selected = null;

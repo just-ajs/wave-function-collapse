@@ -11,16 +11,11 @@ namespace WaveFunctionCollapse
     {
         Wave wave;
         private static Random random = new Random();
-
-        int iterations = 1;
         int averageCollapseStep = 0;
 
-        public WaveCollapseHistory Run(List<Pattern> patterns, int N, int width, int height, float[] weights, bool backtrack)
+        public WaveCollapseHistory Run(List<Pattern> patterns, int N, int width, int height, float[] weights, bool backtrack, int iterations)
         {
             WaveCollapseHistory timelapse = new WaveCollapseHistory();
-
-            //int width = GetNumberofPointsInOneDimension(wavePoints[0].X, wavePoints[wavePoints.Count - 1].X);
-            //int height = GetNumberofPointsInOneDimension(wavePoints[0].Y, wavePoints[wavePoints.Count - 1].Y);
 
             var counter = 0;
             var sumOfCollapsedSteps = 0;
@@ -41,7 +36,6 @@ namespace WaveFunctionCollapse
                 {
                     if (wave.Contradiction()) { break; }
 
-
                     var observed = wave.Observe();
 
                     if (backtrack)
@@ -56,7 +50,7 @@ namespace WaveFunctionCollapse
                             canPropagate = wave.CheckIfPropagateWithoutContradiction(observed.Item1, observed.Item2, observed.Item3);
                             repeatedObservations++;
 
-                            if (repeatedObservations > (int)(patterns.Count / 4))
+                            if (repeatedObservations > (int)(patterns.Count / 2))
                             {
                                 break;
                             }
@@ -82,6 +76,7 @@ namespace WaveFunctionCollapse
                     steps++;
                 }
 
+
                 if (wave.Contradiction())
                 {
                     double percentage = steps / (width * height * 1.0);
@@ -105,6 +100,118 @@ namespace WaveFunctionCollapse
             System.Diagnostics.Debug.WriteLine("Average collapse step is: " + averageCollapseStep + " for " + width * height + " steps");
             return timelapse;
         }
+
+
+        // This function will run the wave function collapse with weights adaptable to the picture
+        public WaveCollapseHistory Run(List<Pattern> patterns, int N, int width, int height, 
+            float[] weights,  int iterations, bool backtrack, 
+            double[,] pictureWeights)
+        {
+            WaveCollapseHistory timelapse = new WaveCollapseHistory();
+
+            var counter = 0;
+            var sumOfCollapsedSteps = 0;
+
+
+            while (counter < iterations)
+            {
+                counter++;
+                int steps = 0;
+
+                wave = new Wave(width, height, patterns, N);
+
+                // Start with random seed
+                SeedRandom(width, height, patterns);
+                AddCurrentFrameToHistory(timelapse);
+
+                // Break if contracition, otherwise run observations until it is not completaly observed
+                while (!wave.IsCollapsed())
+                {
+                    if (wave.Contradiction()) { break; }
+
+                    var observed = wave.ObserveWithImage(pictureWeights);
+
+                    if (backtrack)
+                    {
+                        // Backtracking: working version with one step backtracking
+                        var canPropagate = wave.CheckIfPropagateWithoutContradiction(observed.Item1, observed.Item2, observed.Item3);
+                        int repeatedObservations = 0;
+
+                        while (!canPropagate)
+                        {
+                            observed = wave.ObserveWithImage(pictureWeights);
+                            canPropagate = wave.CheckIfPropagateWithoutContradiction(observed.Item1, observed.Item2, observed.Item3);
+                            repeatedObservations++;
+
+                            if (repeatedObservations > (int)(patterns.Count / 2))
+                            {
+                                break;
+                            }
+                        }
+
+                        wave.PropagateByUpdatingSuperposition(observed.Item1, observed.Item2, observed.Item3);
+                    }
+                    else
+                    {
+                        // No backtracking: working version without backtracking
+                        observed = wave.Observe();
+                        try
+                        {
+                            wave.PropagateByUpdatingSuperposition(observed.Item1, observed.Item2, observed.Item3);
+                        }
+                        catch (DataMisalignedException ex)
+                        {
+                            break;
+                        }
+                    }
+
+                    AddCurrentFrameToHistory(timelapse);
+                    steps++;
+                }
+
+                void returnLocationsWithDifferentWeight (double[,] picture)
+                {
+                    List<int> x = new List<int>();
+                    List<int> y = new List<int>();
+                    
+                    
+                    for (int i = 0; i < picture.GetLength(0); i++)
+                    {
+                        for (int j = 0; j < picture.GetLength(1); j++)
+                        {
+                            if (picture[i,j] != 1)
+                            {
+                                x.Add(i);
+                                y.Add(j);
+                            }
+                        }
+                    }
+                }
+
+                if (wave.Contradiction())
+                {
+                    double percentage = steps / (width * height * 1.0);
+                    System.Diagnostics.Debug.WriteLine("Contradiction on " + steps + " th step of " + width * height +
+                        ", which is " + percentage + " of the whole wave");
+
+                    sumOfCollapsedSteps += steps;
+
+                    timelapse.Clear();
+                    continue;
+                }
+                else
+                {
+                    averageCollapseStep = sumOfCollapsedSteps / counter;
+                    System.Diagnostics.Debug.WriteLine("Average collapse step is: " + averageCollapseStep + " for " + width * height + " steps");
+                    break;
+                }
+            }
+
+            averageCollapseStep = sumOfCollapsedSteps / counter;
+            System.Diagnostics.Debug.WriteLine("Average collapse step is: " + averageCollapseStep + " for " + width * height + " steps");
+            return timelapse;
+        }
+
 
 
         public void SeedRandom(int width, int height, List<Pattern> patterns)

@@ -35,6 +35,12 @@
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="LiveCharts, Version=0.9.7.0, Culture=neutral, PublicKeyToken=0bc1f845d1ebb8df, processorArchitecture=MSIL">
+      <HintPath>..\packages\LiveCharts.0.9.7\lib\net45\LiveCharts.dll</HintPath>
+    </Reference>
+    <Reference Include="LiveCharts.Wpf, Version=0.9.7.0, Culture=neutral, PublicKeyToken=0bc1f845d1ebb8df, processorArchitecture=MSIL">
+      <HintPath>..\packages\LiveCharts.Wpf.0.9.7\lib\net45\LiveCharts.Wpf.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
@@ -59,7 +65,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Components\Get Data\ExportWFCforPix2Pix.cs" />
     <Compile Include="Components\Get Data\GetContradictionsData.cs" />
+    <Compile Include="Components\Get Data\GetWaveDimension.cs" />
+    <Compile Include="Utils.cs" />
     <Compile Include="WaveOutputs.cs" />
     <Compile Include="Components\Pattern From Sample\OverlappingModel.cs" />
     <Compile Include="Components\Visualise\EvaluateProportionsComponent.cs" />
@@ -85,6 +94,7 @@
     <Compile Include="Components\WaveFunctionCollapseComponent.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WaveFunctionCollapseRunner.cs" />
+    <Compile Include="Components\WFCbyImage.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
@@ -94,6 +104,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
     <None Include="Resources\Icon.bmp" />
   </ItemGroup>
   <ItemGroup>

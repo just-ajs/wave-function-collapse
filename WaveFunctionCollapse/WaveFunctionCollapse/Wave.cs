@@ -13,6 +13,8 @@ namespace WaveFunctionCollapse
         public Pattern[,] waveCollapse;
         readonly List<Pattern> patterns;
         readonly int patternSize;
+        float lowestWeight;
+        float highestWeight;
 
         SortedList<double, Vector2d> cellsByEntropy = new SortedList<double, Vector2d>();
 
@@ -29,6 +31,9 @@ namespace WaveFunctionCollapse
             this.height = height;
             this.patterns = patterns;
             this.patternSize = patternSize;
+
+            lowestWeight = getLowestWeight();
+            highestWeight = getHighestWeight();
 
             superpositions = new Superposition[width, height];
 
@@ -178,19 +183,71 @@ namespace WaveFunctionCollapse
         // Find lowest entropy position in entire wave, pick new pattern for this position
         public Tuple<int, int, Pattern> Observe()
         {
-            // Find lowest entropy position
-            //var lowestEntropyPosition = FindLowestEntropy();
-            //var nextPatternToSeedX = lowestEntropyPosition.Item1;
-            //var nextPatternToSeedY = lowestEntropyPosition.Item2;
-
             // Sorted list: Find lowest entropy cooridnates based on sorted list
             var coordx = (int)cellsByEntropy.Values[0].X;
             var coordy = (int)cellsByEntropy.Values[0].Y;
 
+            // Find pattern for lowest entropy position
+            var nextPattern = this.PickRandomPatternForGivenSuperposition(coordx, coordy);
+            return Tuple.Create(coordx, coordy, nextPattern);
+        }
+
+        // Find lowest entropy position in entire wave, pick new pattern for this position
+        public Tuple<int, int, Pattern> ObserveWithImage(double[,] image)
+        {
+            // Sorted list: Find lowest entropy cooridnates based on sorted list
+            var coordx = (int)cellsByEntropy.Values[0].X;
+            var coordy = (int)cellsByEntropy.Values[0].Y;
+
+            // Check what is the value of this position in the image data.
+            if (image[coordx, coordy] != 1)
+            {
+                RecalculateWeights(image);
+            }
 
             // Find pattern for lowest entropy position
             var nextPattern = this.PickRandomPatternForGivenSuperposition(coordx, coordy);
             return Tuple.Create(coordx, coordy, nextPattern);
+        }
+
+        void RecalculateWeights(double[,] image)
+        {
+            // This function needs to apply linear mapping to recalculate weights.
+            // In the class there are stored lowest and highest weights and that is a weight range.
+            // If black tile has low weights, and the value on the picture indicate black - it needs to make it higher. 
+            // Ideally algorithm would do that for whole image:
+            // So if there is white, and the white tile has high weight, the weight will stay the same. 
+
+        }
+
+        float getLowestWeight()
+        {
+            float lowest = 100000.0f;
+
+            for (int i = 0; i < patterns.Count; i++)
+            {
+                if (patterns[i].Weight < lowest)
+                {
+                    lowest = patterns[i].Weight;
+                }
+            }
+
+            return lowest; 
+        }
+
+        float getHighestWeight()
+        {
+            float highest = 0.0f;
+
+            for (int i = 0; i < patterns.Count; i++)
+            {
+                if (patterns[i].Weight > highest)
+                {
+                    highest = patterns[i].Weight;
+                }
+            }
+
+            return highest;
         }
 
         // Count collapsed places in wave
@@ -372,6 +429,9 @@ namespace WaveFunctionCollapse
             return true;
         }
 
+
+
+
         // In the wave find lowest entropy in order to place there a pattern
         Tuple<int, int> FindLowestEntropy()
         {
@@ -470,7 +530,7 @@ namespace WaveFunctionCollapse
         // Pick pattern to seed based on roulettewheel selection (based on weights)
         public Pattern PickRandomPatternForGivenSuperposition(int nextPatternToSeedX, int nextPatternToSeedY)
         {
-            return superpositions[nextPatternToSeedX, nextPatternToSeedY].rouletteWheelSelections(patterns);
+            return superpositions[nextPatternToSeedX, nextPatternToSeedY].RouletteWheelSelections(patterns);
         }
 
         void OrderCellsListByEntropy()

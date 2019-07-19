@@ -10,7 +10,8 @@ namespace WaveFunctionCollapse
     {
 
         public PatternComponent()
-          : base("Overlapping Model", "Patterns Library",  "This will create library of pattern from provided sample", "WFC", "Pattern From Sample")
+          : base("Overlapping Model", "Patterns Library",  
+                "This will create library of pattern from provided sample", "WFC", "Pattern From Sample")
         {
         }
 

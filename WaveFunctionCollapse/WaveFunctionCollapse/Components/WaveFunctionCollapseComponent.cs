@@ -26,6 +26,7 @@ namespace WaveFunctionCollapse
             pManager.AddParameter(new PatternFromSampleParam());
             pManager.AddPointParameter("Wave", "", "", GH_ParamAccess.list);
             pManager.AddBooleanParameter("Backtrack", "", "", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Iterations", "", "", GH_ParamAccess.item);
         }
 
         // OUTPUT
@@ -49,20 +50,19 @@ namespace WaveFunctionCollapse
             bool backtrack = false;
             DA.GetData<bool>(2, ref backtrack);
 
+            double iterations = 0;
+            DA.GetData<double>(3, ref iterations);
+
             var patterns = gh_patterns.Value.Patterns;
-            var tilesA = gh_patterns.Value.UnitElementsOfType0;
-            var tilesB = gh_patterns.Value.UnitElementsOfType1;
-            var allTiles = gh_patterns.Value.UnitElementsCenters;
             var weights = gh_patterns.Value.TilesWeights;
             var N = gh_patterns.Value.N;
 
-
-            int width = GetNumberofPointsInOneDimension(wavePoints[0].X, wavePoints[wavePoints.Count - 1].X);
-            int height = GetNumberofPointsInOneDimension(wavePoints[0].Y, wavePoints[wavePoints.Count - 1].Y);
+            int width = Utils.GetNumberofPointsInOneDimension(wavePoints[0].X, wavePoints[wavePoints.Count - 1].X);
+            int height = Utils.GetNumberofPointsInOneDimension(wavePoints[0].Y, wavePoints[wavePoints.Count - 1].Y);
 
             // RUN WAVEFUNCION COLLAPSE
             var wfc = new WaveFunctionCollapseRunner();
-            var history = wfc.Run(patterns, N, width, height, weights, backtrack);
+            var history = wfc.Run(patterns, N, width, height, weights, backtrack, (int)iterations);
             var return_value = new GH_WaveCollapseHistory(history);
 
             var patternsOccurence = wfc.GetPatternCounts();
@@ -81,12 +81,6 @@ namespace WaveFunctionCollapse
             }
         }
 
-
-        // Find width and height of surface
-        public int GetNumberofPointsInOneDimension(double firstPointCoordinate, double secondPointCoordinate)
-        {
-            return Math.Abs((int)(0.5 * (firstPointCoordinate - secondPointCoordinate) - 1));
-        }
 
         /// Provides an Icon for every component that will be visible in the User Interface. Icons need to be 24x24 pixels.
         protected override System.Drawing.Bitmap Icon
