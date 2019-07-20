@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
@@ -21,6 +22,10 @@ namespace WaveFunctionCollapse.Components
         static int biteSize;
         private static byte[] _imageBuffer;
         static int width, height;
+
+        int[] white = new int[3] { 255, 255, 255 };
+        int[] green = new int[3] { 0, 255, 0 };
+        int[] blue = new int[3] { 0, 0, 255 };
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
@@ -61,23 +66,37 @@ namespace WaveFunctionCollapse.Components
                 // Generate new superposition with noise reduced.
                 var reducedNoise = RemoveNoiseFromImage(waveElements[i], patterns);
 
-                // Get values of pixels from original picture.
+                // Get values of pixels from original picture and represent them as int{0,1,2}. 
                 var pixelsCodesOriginal = Utils.GetImageValuesFromWave(waveElements[i].Superpositions);
-
-                // Get values of pixels from reduced noise picture.
                 var pixelsCodesNoiseReduced = Utils.GetImageValuesFromWave(reducedNoise);
 
+                // Change to rgb
+                var orignalPictureRGB = Utils.CellsValuesToRGBColours(pixelsCodesOriginal, white, blue, green);
+                var processedPictureRGB = Utils.CellsValuesToRGBColours(pixelsCodesNoiseReduced, white, blue, green);
+
+                // Blurr the image
+                var blurredNoiseReduced = Utils.BlurImage(processedPictureRGB);
+                var blurredNoiseReduced02 = Utils.BlurImage(blurredNoiseReduced);
+                var blurredNoiseReduced03 = Utils.BlurImage(blurredNoiseReduced02);
+
+                // Add masks
+                var background = Utils.ColorFromRGB(255, 159, 0);
+                var mask = Utils.ColorFromRGB(0, 0, 222);
+                var blurredNoiseReducedMasked = Utils.AddMask(blurredNoiseReduced03, background, mask, 0.65f);
+
                 // Merge original and processed image.
-                var mergedImages = mergeTwoImages(pixelsCodesOriginal, pixelsCodesNoiseReduced);
+                var mergedImages = mergeTwoImages(orignalPictureRGB, blurredNoiseReducedMasked);
 
-                // Convert to RGB.
-                Utils.ConvertToRGB(mergedImages, i, series, width * 2, height, _imageBuffer);
+                // Plot from RGB
+                Utils.PlotPixelsFromRGB(mergedImages, _imageBuffer);
 
-                // Save to file.
-                Utils.SaveToPicture(mergedImages, i, series, width*2, height, _imageBuffer);
+                // Save to file
+                Utils.SaveToPicture(mergedImages, i, series, _imageBuffer);
             }
 
         }
+
+        
 
         Superposition[,] RemoveNoiseFromImage(WaveCollapseHistoryElement wfc, PatternFromSampleElement p)
         {
@@ -91,10 +110,15 @@ namespace WaveFunctionCollapse.Components
             // Find superposition to replace once colorful cells should be changed to empty. 
             Superposition emptySuperpositiontoReplace = FindEmptySuperpositionToReplace(superpositions, patterns);
 
-            RemoveSingleCells(ref superpositionsWithoutNoise, superpositions, emptySuperpositiontoReplace, 2, 2);
-            RemoveSingleCells(ref superpositionsWithoutNoise, superpositions, emptySuperpositiontoReplace, 1, 4);
-            RemoveSingleCells(ref superpositionsWithoutNoise, superpositions, emptySuperpositiontoReplace, 2, 2);
-            RemoveSingleCells(ref superpositionsWithoutNoise, superpositions, emptySuperpositiontoReplace, 1, 4);
+            RemoveSingleCells(ref superpositionsWithoutNoise, superpositions, emptySuperpositiontoReplace, 2, 1);
+            RemoveSingleCells(ref superpositionsWithoutNoise, superpositions, emptySuperpositiontoReplace, 1, 1);
+            RemoveSingleCells(ref superpositionsWithoutNoise, superpositions, emptySuperpositiontoReplace, 2, 1);
+            RemoveSingleCells(ref superpositionsWithoutNoise, superpositions, emptySuperpositiontoReplace, 1, 1);
+            //RemoveSingleCells(ref superpositionsWithoutNoise, superpositions, emptySuperpositiontoReplace, 2, 1);
+            //RemoveSingleCells(ref superpositionsWithoutNoise, superpositions, emptySuperpositiontoReplace, 1, 1);
+            //RemoveSingleCells(ref superpositionsWithoutNoise, superpositions, emptySuperpositiontoReplace, 2, 1);
+            //RemoveSingleCells(ref superpositionsWithoutNoise, superpositions, emptySuperpositiontoReplace, 1, 1);
+
 
             return superpositionsWithoutNoise;
         }
@@ -102,8 +126,10 @@ namespace WaveFunctionCollapse.Components
         void RemoveSingleCells(ref Superposition[,] newSuperpositon, Superposition[,] existingSuperpositions,
             Superposition empty, int neighbourLimit, int iterations)
         {
+            
             for (int k = 0; k < iterations; k++)
             {
+                int removed = 0;
                 for (int i = 0; i < existingSuperpositions.GetLength(0); i++)
                 {
                     for (int j = 0; j < existingSuperpositions.GetLength(1); j++)
@@ -117,12 +143,17 @@ namespace WaveFunctionCollapse.Components
                             if (neighbours < neighbourLimit)
                             {
                                 newSuperpositon[i, j] = empty;
+                                newSuperpositon[i, j].state = State.EMPTY;
 
+                                removed++;
                             }
                         }
                     }
                 }
+                Console.WriteLine("removed: " + removed);
             }
+
+            
         }
 
 
@@ -224,9 +255,9 @@ namespace WaveFunctionCollapse.Components
             
         }
 
-        int[,] mergeTwoImages (int[,] imageOriginal, int[,] imageProcessed)
+        Color[,] mergeTwoImages (Color[,] imageOriginal, Color[,] imageProcessed)
         {
-            int[,] merged = new int[imageOriginal.GetLength(0) + imageProcessed.GetLength(0), imageOriginal.GetLength(1)];
+            Color[,] merged = new Color[imageOriginal.GetLength(0) + imageProcessed.GetLength(0), imageOriginal.GetLength(1)];
 
             for (int i = 0; i < merged.GetLength(0); i++)
             {

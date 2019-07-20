@@ -202,7 +202,7 @@ namespace WaveFunctionCollapse
             // Check what is the value of this position in the image data.
             if (image[coordx, coordy] != 1)
             {
-                RecalculateWeights(image);
+                var recalculatedPatterns =  RecalculateWeights(image, coordx, coordy);
             }
 
             // Find pattern for lowest entropy position
@@ -210,14 +210,59 @@ namespace WaveFunctionCollapse
             return Tuple.Create(coordx, coordy, nextPattern);
         }
 
-        void RecalculateWeights(double[,] image)
+        List<Pattern> RecalculateWeights(double[,] image, int coordX, int coordY)
         {
             // This function needs to apply linear mapping to recalculate weights.
             // In the class there are stored lowest and highest weights and that is a weight range.
             // If black tile has low weights, and the value on the picture indicate black - it needs to make it higher. 
             // Ideally algorithm would do that for whole image:
-            // So if there is white, and the white tile has high weight, the weight will stay the same. 
+            // So if there is white, and the white tile has high weight, the weight will stay the same.
 
+            // This is not automatic now - HARD CODED TROLOLOLOLO
+
+            // Take image value
+            double cellValue = image[coordX, coordY];
+
+            // Copy patterns
+            List<Pattern> clone = new List<Pattern>();
+            for (int i = 0; i < patterns.Count; i++)
+            {
+                var patternClone = new Pattern(patterns[i].MiniTile, patterns[i].overalWeights, patterns[i].patternSize);
+                clone.Add(patternClone);
+            }
+
+            // Get weights
+            var weights = clone[0].overalWeights;
+
+            // Go through every pattern and reassing values
+            for (int i = 0; i < clone.Count; i++)
+            {
+                // For each pattern:
+                // Calculate new weights
+                float sumWeights = 0;
+
+                for (int k = 0; k < patternSize; k++)
+                {
+                    for (int m = 0; m < patternSize; m++)
+                    {
+                        if (clone[i].MiniTile[k, m] == State.EMPTY)
+                        {
+                            sumWeights += 0.25f * lowestWeight;
+                        }
+                        else if (clone[i].MiniTile[k, m] == State.HALF_TILE)
+                        {
+                            sumWeights += 0.25f * ((lowestWeight + highestWeight) / 2);
+                        }
+                        else if (clone[i].MiniTile[k, m] == State.FULL_TILE)
+                        {
+                            sumWeights += 0.25f * highestWeight;
+                        }
+                    }
+                }
+                clone[i].Weight = sumWeights;
+            }
+
+            return clone;
         }
 
         float getLowestWeight()
@@ -531,6 +576,13 @@ namespace WaveFunctionCollapse
         public Pattern PickRandomPatternForGivenSuperposition(int nextPatternToSeedX, int nextPatternToSeedY)
         {
             return superpositions[nextPatternToSeedX, nextPatternToSeedY].RouletteWheelSelections(patterns);
+        }
+
+        // Pick pattern to seed based on roulettewheel selection (based on weights)
+        public Pattern PickRandomPatternForGivenSuperpositionWithTweakedWeights(int nextPatternToSeedX, int nextPatternToSeedY, 
+            List<Pattern> recalculatedPatterns)
+        {
+            return superpositions[nextPatternToSeedX, nextPatternToSeedY].RouletteWheelSelections(recalculatedPatterns);
         }
 
         void OrderCellsListByEntropy()

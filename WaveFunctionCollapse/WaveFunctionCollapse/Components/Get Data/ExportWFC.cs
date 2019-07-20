@@ -32,6 +32,11 @@ namespace WaveFunctionCollapse
         private static byte[] _imageBuffer;
         static int width, height;
 
+
+        int[] white = new int[3] { 255, 255, 255 };
+        int[] green = new int[3] { 49, 58, 179 };
+        int[] blue = new int[3] { 86, 206, 27 };
+
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             GH_WaveCollapseResults waveCollapseDataset = new GH_WaveCollapseResults();
@@ -65,8 +70,14 @@ namespace WaveFunctionCollapse
                 // Get values for pixels
                 var pixelsCodes = Utils.GetImageValuesFromWave(superpositions);
 
+                // Change to rgb
+                var pictureRGB = Utils.CellsValuesToRGBColours(pixelsCodes, white, blue, green);
+
+                // Plot picture from rgb
+                Utils.PlotPixelsFromRGB(pictureRGB, _imageBuffer);
+
                 // Save ti file
-                Utils.SaveToPicture(pixelsCodes, i, series, width, height, _imageBuffer);
+                Utils.SaveToPicture(pictureRGB, i, series, _imageBuffer);
             }
             
 

@@ -200,7 +200,7 @@ namespace WaveFunctionCollapse
 
         public object Clone()
         {
-            return new Superposition(this);
+            return new Superposition(this, patternFromSample);
         }
     }
 }

@@ -31,6 +31,7 @@ namespace WaveFunctionCollapse
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
+            pManager.AddParameter(new PatternHistoryParam());
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -67,6 +68,8 @@ namespace WaveFunctionCollapse
             var wfc = new WaveFunctionCollapseRunner();
             var history = wfc.Run(patterns, N, width, height, weights, (int)iterations, backtrack, image);
             var return_value = new GH_WaveCollapseHistory(history);
+
+            DA.SetData(0, return_value);
         }
 
         double[,] convertImageListToArray(List<double> image, int width, int height)

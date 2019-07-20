@@ -7,11 +7,11 @@ namespace WaveFunctionCollapse
 {
     public class Pattern: ICloneable
     {
-        private int patternSize;
+        public int patternSize;
         public Superposition[,] overlapsSuperpositions;
-        float[] overalWeights;
+        public float[] overalWeights;
 
-        public float Weight { get; private set; }
+        public float Weight { get;  set; }
         public State[,] MiniTile { get; set; }
 
         // Create a new pattern from provided states, weights and size of pattern
