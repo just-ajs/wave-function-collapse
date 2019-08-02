@@ -24,8 +24,8 @@ namespace WaveFunctionCollapse.Components
         static int width, height;
 
         int[] white = new int[3] { 255, 255, 255 };
-        int[] green = new int[3] { 0, 255, 0 };
-        int[] blue = new int[3] { 0, 0, 255 };
+        int[] green = new int[3] { 20, 220, 50 };
+        int[] blue = new int[3] { 10, 50, 220 };
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
@@ -82,7 +82,7 @@ namespace WaveFunctionCollapse.Components
                 // Add masks
                 var background = Utils.ColorFromRGB(255, 159, 0);
                 var mask = Utils.ColorFromRGB(0, 0, 222);
-                var blurredNoiseReducedMasked = Utils.AddMask(blurredNoiseReduced03, background, mask, 0.65f);
+                var blurredNoiseReducedMasked = Utils.AddMask(blurredNoiseReduced02, background, mask, 0.68f);
 
                 // Merge original and processed image.
                 var mergedImages = mergeTwoImages(orignalPictureRGB, blurredNoiseReducedMasked);

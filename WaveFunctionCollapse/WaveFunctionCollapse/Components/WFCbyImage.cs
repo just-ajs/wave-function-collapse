@@ -32,6 +32,8 @@ namespace WaveFunctionCollapse
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddParameter(new PatternHistoryParam());
+            pManager.AddNumberParameter("Original weights", "", "", GH_ParamAccess.list);
+            pManager.AddNumberParameter("Modified weights", "", "", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)

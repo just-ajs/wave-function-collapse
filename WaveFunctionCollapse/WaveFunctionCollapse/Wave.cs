@@ -16,6 +16,9 @@ namespace WaveFunctionCollapse
         float lowestWeight;
         float highestWeight;
 
+        //public List<double> recalculatedWeights;
+        //public List<Pattern> recalculatedPatterns;
+
         SortedList<double, Vector2d> cellsByEntropy = new SortedList<double, Vector2d>();
 
         public List<Point3d> half;
@@ -192,22 +195,53 @@ namespace WaveFunctionCollapse
             return Tuple.Create(coordx, coordy, nextPattern);
         }
 
+       
+
         // Find lowest entropy position in entire wave, pick new pattern for this position
-        public Tuple<int, int, Pattern> ObserveWithImage(double[,] image)
+        public Tuple<int, int, Pattern, int> ObserveWithImage(double[,] image)
         {
             // Sorted list: Find lowest entropy cooridnates based on sorted list
             var coordx = (int)cellsByEntropy.Values[0].X;
             var coordy = (int)cellsByEntropy.Values[0].Y;
 
+            // Recalculate patterns and save new weights with patterns to csv file
+            var recalculatedPatterns = RecalculateWeights(image, coordx, coordy);
+            var recalculatedWeights = GetWeightsFromPatterns(recalculatedPatterns);
+            var originalWeights = GetWeightsFromPatterns(patterns);
+            Utils.SaveWeightToFile(originalWeights, recalculatedWeights);
+
+            var nextPattern = new Pattern();
+            int patternIndex = 0;
+
             // Check what is the value of this position in the image data.
-            if (image[coordx, coordy] != 1)
+            if (image[coordx, coordy] < 0.9)
             {
-                var recalculatedPatterns =  RecalculateWeights(image, coordx, coordy);
+                // Find pattern for lowest entropy position
+                nextPattern = this.PickRandomPatternForGivenSuperpositionWithTweakedWeights(coordx, coordy, recalculatedPatterns);
+                patternIndex = getPatternIndex(recalculatedPatterns, nextPattern);
+            }
+            else
+            {
+                // Find pattern for lowest entropy position
+                nextPattern = this.PickRandomPatternForGivenSuperposition(coordx, coordy);
+                patternIndex = getPatternIndex(patterns, nextPattern);
             }
 
-            // Find pattern for lowest entropy position
-            var nextPattern = this.PickRandomPatternForGivenSuperposition(coordx, coordy);
-            return Tuple.Create(coordx, coordy, nextPattern);
+            return Tuple.Create(coordx, coordy, nextPattern, patternIndex);
+        }
+
+        
+
+        List<double> GetWeightsFromPatterns (List<Pattern> list)
+        {
+            List<double> newWeights = new List<double>();
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                newWeights.Add(list[i].Weight);
+            }
+
+            return newWeights;
         }
 
         List<Pattern> RecalculateWeights(double[,] image, int coordX, int coordY)
@@ -247,7 +281,7 @@ namespace WaveFunctionCollapse
                     {
                         if (clone[i].MiniTile[k, m] == State.EMPTY)
                         {
-                            sumWeights += 0.25f * lowestWeight;
+                            sumWeights += 0.1f * lowestWeight;
                         }
                         else if (clone[i].MiniTile[k, m] == State.HALF_TILE)
                         {
@@ -259,6 +293,11 @@ namespace WaveFunctionCollapse
                         }
                     }
                 }
+                 if (sumWeights >= 0.75 * highestWeight)
+                {
+                    sumWeights = sumWeights * 2;
+                }
+
                 clone[i].Weight = sumWeights;
             }
 
@@ -436,6 +475,88 @@ namespace WaveFunctionCollapse
             }
         }
 
+        int getPatternIndex(List<Pattern> list, Pattern pattern)
+        {
+            var patternIndex = list.FindIndex(c => c == pattern);
+            return patternIndex;
+        }
+
+        // With every new placed pattern, its overlapping superposition needs to be applied for a wave
+        public void PropagateByUpdatingSuperpositionWithRecalculatedPatterns(int xPatternCoordOnWave, int yPatternCoordonWave, 
+            Pattern placedPatternOnWave, List<Pattern> recalculatedPatterns)
+        {
+            // Get index of chosen pattern
+            var patternIndex = getPatternIndex(recalculatedPatterns, placedPatternOnWave);
+
+            // Real pattern with raw weights
+            var realPattern = patterns[patternIndex];
+
+            // Assign pattern
+            waveCollapse[xPatternCoordOnWave, yPatternCoordonWave] = realPattern;
+
+            // in the wave superposition for this location, make only pattern that is placed on wave true, else to false
+            var currentSuperposition = superpositions[xPatternCoordOnWave, yPatternCoordonWave];
+            currentSuperposition.MakeAllFalseBesideOnePattern(patternIndex);
+
+            // In the sorted list, remove chosen pattern
+            var patternIndexInSortedList = cellsByEntropy.IndexOfValue(new Vector2d(xPatternCoordOnWave, yPatternCoordonWave));
+            cellsByEntropy.RemoveAt(patternIndexInSortedList);
+
+            // initialize list of overlapping neigbours that could be next tile
+            realPattern.InitializeListOfOverlappingNeighbours(patterns);
+
+            // setup indices of superpositions on the wave that is influenced by placed pattern
+            int patternSuperpositionsXSize = realPattern.overlapsSuperpositions.GetLength(0); // 3
+            int patternSuperpositionsYSize = realPattern.overlapsSuperpositions.GetLength(1);
+
+            // go through every overlapping neighbour and overlay pattern superpositions over wave superpositions
+            for (int i = 0; i < patternSuperpositionsXSize; i++)
+            {
+                for (int j = 0; j < patternSuperpositionsYSize; j++)
+                {
+                    if (i == (patternSuperpositionsXSize - 1) / 2 && j == (patternSuperpositionsYSize - 1) / 2) continue;
+
+                    int superpositionIndexX = xPatternCoordOnWave - ((patternSuperpositionsXSize - 1) / 2) + i;
+                    int superpositionIndexY = yPatternCoordonWave - ((patternSuperpositionsYSize - 1) / 2) + j;
+
+                    if (superpositionIndexX < 0 || superpositionIndexY < 0 || superpositionIndexX > superpositions.GetLength(0) - 1 || superpositionIndexY > superpositions.GetLength(1) - 1) continue;
+
+                    if (waveCollapse[superpositionIndexX, superpositionIndexY] == null)
+                    {
+                        // Save superposition location as vector
+                        Vector2d vector = new Vector2d(superpositionIndexX, superpositionIndexY);
+
+                        // Find index of this element in the sorted by entropy list
+                        var getIndexOfCellsByEntropy = cellsByEntropy.IndexOfValue(vector);
+
+                        // Remove that element from the sorted list
+                        cellsByEntropy.RemoveAt(getIndexOfCellsByEntropy);
+
+                        superpositions[superpositionIndexX, superpositionIndexY].OverlayWithAnother(placedPatternOnWave.overlapsSuperpositions[i, j]);
+
+                        // Add to sorted list new position with same x, y and new entropy
+                        double newEntropyKey = superpositions[superpositionIndexX, superpositionIndexY].Entropy;
+
+                        if (newEntropyKey == 0)
+                        {
+                            var noise = superpositions[superpositionIndexX, superpositionIndexY].AddNoise();
+                            newEntropyKey += noise;
+
+                        }
+                        else if (newEntropyKey == -1)
+                        {
+                            return;
+                            throw new DataMisalignedException("contradiction!");
+                        }
+
+                        cellsByEntropy.Add(newEntropyKey, vector);
+                    }
+
+                }
+            }
+        }
+
+
         public bool CheckIfPropagateWithoutContradiction(int xPatternCoordOnWave, int yPatternCoordonWave, Pattern candidate)
         {
             // Find index of the chosen pattern in the patterns from sample list
@@ -473,6 +594,46 @@ namespace WaveFunctionCollapse
             }
             return true;
         }
+
+        public bool CheckIfPropagateWithoutContradictionWithRecalculatedWeights(int xPatternCoordOnWave, int yPatternCoordonWave, 
+            Pattern candidate, int patternIndex)
+        {
+            // The pattern from original data
+            var proposedPattern = patterns[patternIndex];
+
+            // We want to do that even only for testing
+            // Initialize list of overlapping neigbours that could be next tile
+            proposedPattern.InitializeListOfOverlappingNeighbours(patterns);
+
+            // Setup indices of superpositions on the wave that is influenced by placed pattern
+            int patternSuperpositionsXSize = proposedPattern.overlapsSuperpositions.GetLength(0);
+            int patternSuperpositionsYSize = proposedPattern.overlapsSuperpositions.GetLength(1);
+
+            int possiblePatterns = 100;
+            // Go through every overlapping neighbour and overlay pattern superpositions over wave superpositions
+            for (int i = 0; i < patternSuperpositionsXSize; i++)
+            {
+                for (int j = 0; j < patternSuperpositionsYSize; j++)
+                {
+                    if (i == (patternSuperpositionsXSize - 1) / 2 && j == (patternSuperpositionsYSize - 1) / 2) continue;
+
+                    int superpositionIndexX = xPatternCoordOnWave - ((patternSuperpositionsXSize - 1) / 2) + i;
+                    int superpositionIndexY = yPatternCoordonWave - ((patternSuperpositionsYSize - 1) / 2) + j;
+
+                    if (superpositionIndexX < 0 || superpositionIndexY < 0 || superpositionIndexX > superpositions.GetLength(0) - 1 ||
+                        superpositionIndexY > superpositions.GetLength(1) - 1) continue;
+
+                    if (waveCollapse[superpositionIndexX, superpositionIndexY] == null)
+                    {
+                        possiblePatterns = superpositions[superpositionIndexX, superpositionIndexY].CheckPossiblePatternsCount(proposedPattern.overlapsSuperpositions[i, j]);
+                    }
+
+                    if (possiblePatterns == 0) { return false; }
+                }
+            }
+            return true;
+        }
+
 
 
 
@@ -584,6 +745,8 @@ namespace WaveFunctionCollapse
         {
             return superpositions[nextPatternToSeedX, nextPatternToSeedY].RouletteWheelSelections(recalculatedPatterns);
         }
+
+
 
         void OrderCellsListByEntropy()
         {

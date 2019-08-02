@@ -24,6 +24,11 @@ namespace WaveFunctionCollapse
             CalculateWeight();
         }
 
+        public Pattern()
+        {
+
+        }
+
         public Pattern(Pattern pattern)
         {
             this.patternSize = pattern.patternSize;

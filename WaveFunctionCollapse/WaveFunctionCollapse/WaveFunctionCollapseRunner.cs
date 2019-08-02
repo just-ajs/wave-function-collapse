@@ -134,13 +134,20 @@ namespace WaveFunctionCollapse
                     if (backtrack)
                     {
                         // Backtracking: working version with one step backtracking
-                        var canPropagate = wave.CheckIfPropagateWithoutContradiction(observed.Item1, observed.Item2, observed.Item3);
+                        var canPropagate = wave.CheckIfPropagateWithoutContradictionWithRecalculatedWeights
+                            (observed.Item1, observed.Item2, observed.Item3, observed.Item4);
                         int repeatedObservations = 0;
 
                         while (!canPropagate)
                         {
                             observed = wave.ObserveWithImage(pictureWeights);
-                            canPropagate = wave.CheckIfPropagateWithoutContradiction(observed.Item1, observed.Item2, observed.Item3);
+
+                            if (observed.Item3 == null)
+                            {
+                                throw new Exception("Null pattern selected");
+                            }
+                            canPropagate = wave.CheckIfPropagateWithoutContradictionWithRecalculatedWeights
+                                (observed.Item1, observed.Item2, observed.Item3, observed.Item4);
                             repeatedObservations++;
 
                             if (repeatedObservations > (int)(patterns.Count / 2))
@@ -149,15 +156,15 @@ namespace WaveFunctionCollapse
                             }
                         }
 
-                        wave.PropagateByUpdatingSuperposition(observed.Item1, observed.Item2, observed.Item3);
+                        wave.PropagateByUpdatingSuperposition(observed.Item1, observed.Item2, patterns[observed.Item4]);
                     }
                     else
                     {
                         // No backtracking: working version without backtracking
-                        observed = wave.Observe();
+                        observed = wave.ObserveWithImage(pictureWeights);
                         try
                         {
-                            wave.PropagateByUpdatingSuperposition(observed.Item1, observed.Item2, observed.Item3);
+                            wave.PropagateByUpdatingSuperposition(observed.Item1, observed.Item2, patterns[observed.Item4]);
                         }
                         catch (DataMisalignedException ex)
                         {

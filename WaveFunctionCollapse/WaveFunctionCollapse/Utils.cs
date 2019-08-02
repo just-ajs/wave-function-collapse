@@ -140,7 +140,7 @@ namespace WaveFunctionCollapse
 
         public static void SaveToPicture(Color[,] picture, int index, string series, byte[] _imageBuffer)
         {
-            string i1Path = @"r:\pix2pix_dataset\" + series + index.ToString() + ".png";
+            string i1Path = @"r:\pix2pix_dataset\02\" + series +  index.ToString() + ".png";
 
             // Saving to file
             unsafe
@@ -182,6 +182,28 @@ namespace WaveFunctionCollapse
             //int index = results.Value.Elements.Count - 1;
             var waveElements = results.Value.Elements.ToList();
             return waveElements;
+        }
+
+        public static void SaveWeightToFile(List<double> realWeights, List<double> newWeight)
+        {
+            var sb = buildWeightDataString(realWeights, newWeight);
+            string filePath = @"R:\csv\weights\raw_and_edited_weights.csv";
+            System.IO.File.WriteAllText(filePath, sb.ToString());
+        }
+
+        static StringBuilder buildWeightDataString(List<double> realWeights, List<double> newWeights)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("{0}, {1}", "Original weights", "New weights");
+            sb.AppendLine();
+
+            for (int i = 0; i < realWeights.Count; i++)
+            {
+                sb.AppendFormat("{0}, {1}", realWeights[i], newWeights[i]);
+                sb.AppendLine();
+            }
+
+            return sb;
         }
 
         public static void SaveToTextFile(Superposition[,] superpositions, int width, int height)
