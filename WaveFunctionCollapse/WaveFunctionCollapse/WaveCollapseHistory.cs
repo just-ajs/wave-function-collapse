@@ -22,9 +22,11 @@ namespace WaveFunctionCollapse
         public Superposition[,] Superpositions;
         public TileSuperposition[,] Uncollapsed;
         public int[] PatternOccurence;
+        public double[,] Entropies;
 
         public WaveCollapseHistoryElement(List<Point3d> halfTile, List<Point3d> fullTile, 
-            List<Point3d> empty, Superposition[,] superpositions, TileSuperposition[,] uncollapsed, int[] patternOccurence)
+            List<Point3d> empty, Superposition[,] superpositions, TileSuperposition[,] uncollapsed, int[] patternOccurence,
+            double[,] entropies)
         {
             HalfTile = halfTile;
             FullTile = fullTile;
@@ -32,6 +34,7 @@ namespace WaveFunctionCollapse
             Superpositions = superpositions;
             Uncollapsed = uncollapsed;
             PatternOccurence = patternOccurence;
+            Entropies = entropies.Clone() as double[,];
         }
     }
 

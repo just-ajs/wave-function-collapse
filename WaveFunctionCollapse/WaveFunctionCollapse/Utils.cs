@@ -140,7 +140,7 @@ namespace WaveFunctionCollapse
 
         public static void SaveToPicture(Color[,] picture, int index, string series, byte[] _imageBuffer)
         {
-            string i1Path = @"r:\pix2pix_dataset\02\" + series +  index.ToString() + ".png";
+            string i1Path = @"r:\pix2pix_dataset\01\" + series +  index.ToString() + ".png";
 
             // Saving to file
             unsafe

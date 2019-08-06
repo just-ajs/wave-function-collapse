@@ -82,7 +82,7 @@ namespace WaveFunctionCollapse.Components
                 // Add masks
                 var background = Utils.ColorFromRGB(255, 159, 0);
                 var mask = Utils.ColorFromRGB(0, 0, 222);
-                var blurredNoiseReducedMasked = Utils.AddMask(blurredNoiseReduced02, background, mask, 0.68f);
+                var blurredNoiseReducedMasked = Utils.AddMask(blurredNoiseReduced02, background, mask, 0.7f);
 
                 // Merge original and processed image.
                 var mergedImages = mergeTwoImages(orignalPictureRGB, blurredNoiseReducedMasked);

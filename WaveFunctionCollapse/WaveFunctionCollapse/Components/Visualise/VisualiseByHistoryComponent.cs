@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Grasshopper;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
@@ -44,6 +45,7 @@ namespace WaveFunctionCollapse
             pManager.AddColourParameter("colours", "", "", GH_ParamAccess.list);
             pManager.AddSurfaceParameter("uncollapsed", "", "", GH_ParamAccess.list);
             pManager.AddNumberParameter("pattern count", "", "", GH_ParamAccess.list);
+            pManager.AddNumberParameter("Entropies", "", "", GH_ParamAccess.list);
            
 
         }
@@ -88,6 +90,9 @@ namespace WaveFunctionCollapse
 
             var tempUncollapsed = GetUncollapsedPoints(uncollapsed);
 
+            var entropies = waveElements.Entropies;
+            var entropies_flatten = entropies.Cast<double>().ToArray();
+
             // move tiles on canvas
             var halfTilesRelocated = MovePointsOnCanvas((int)wavePositionX, (int)wavePositionY, waveElements.HalfTile);
             var fullTilesRelocated = MovePointsOnCanvas((int)wavePositionX, (int)wavePositionY, waveElements.FullTile);
@@ -117,6 +122,7 @@ namespace WaveFunctionCollapse
             DA.SetDataList(3, colours);
             DA.SetDataList(4, duplicatedUncollapsed);
             DA.SetDataList(5, waveElements.PatternOccurence);
+            DA.SetDataList(6, entropies_flatten);
         }
 
 

@@ -105,7 +105,7 @@ namespace WaveFunctionCollapse
         // This function will run the wave function collapse with weights adaptable to the picture
         public WaveCollapseHistory Run(List<Pattern> patterns, int N, int width, int height, 
             float[] weights,  int iterations, bool backtrack, 
-            double[,] pictureWeights)
+            double[,] image)
         {
             WaveCollapseHistory timelapse = new WaveCollapseHistory();
 
@@ -118,10 +118,10 @@ namespace WaveFunctionCollapse
                 counter++;
                 int steps = 0;
 
-                wave = new Wave(width, height, patterns, N);
+                wave = new Wave(width, height, patterns, N, image);
 
                 // Start with random seed
-                SeedRandom(width, height, patterns);
+                SeedByImage(image, patterns);
                 AddCurrentFrameToHistory(timelapse);
 
                 // Break if contracition, otherwise run observations until it is not completaly observed
@@ -129,7 +129,7 @@ namespace WaveFunctionCollapse
                 {
                     if (wave.Contradiction()) { break; }
 
-                    var observed = wave.ObserveWithImage(pictureWeights);
+                    var observed = wave.ObserveWithImage(image);
 
                     if (backtrack)
                     {
@@ -140,7 +140,7 @@ namespace WaveFunctionCollapse
 
                         while (!canPropagate)
                         {
-                            observed = wave.ObserveWithImage(pictureWeights);
+                            observed = wave.ObserveWithImage(image);
 
                             if (observed.Item3 == null)
                             {
@@ -161,7 +161,7 @@ namespace WaveFunctionCollapse
                     else
                     {
                         // No backtracking: working version without backtracking
-                        observed = wave.ObserveWithImage(pictureWeights);
+                        observed = wave.ObserveWithImage(image);
                         try
                         {
                             wave.PropagateByUpdatingSuperposition(observed.Item1, observed.Item2, patterns[observed.Item4]);
@@ -221,6 +221,8 @@ namespace WaveFunctionCollapse
 
 
 
+ 
+
         public void SeedRandom(int width, int height, List<Pattern> patterns)
         {
             var x = random.Next(width);
@@ -228,6 +230,15 @@ namespace WaveFunctionCollapse
 
             var seedPattern = GetSeedPattern(x, y, patterns);
             wave.PropagateByUpdatingSuperposition(x, y, seedPattern);
+        }
+
+        public void SeedByImage(double[,] image, List<Pattern> patterns)
+        {
+            var x = wave.cellsByEntropyFromImage.ElementAt(0);
+            var coord = x.Value;
+
+            var seedPattern = GetSeedPattern((int)coord.X, (int)coord.Y, patterns);
+            wave.PropagateByUpdatingSuperposition((int)coord.X, (int)coord.Y, seedPattern);
         }
 
         public int GetAverageCollapseStep()
@@ -248,7 +259,8 @@ namespace WaveFunctionCollapse
             var patternOccurence = wave.GetCollapsedPatternsCounts();
 
             var timeFrameElement = new WaveCollapseHistoryElement(timeFrameToPoints.Item1, 
-                timeFrameToPoints.Item2, timeFrameToPoints.Item3, wave.superpositions, timeFrameUncollapsed, patternOccurence);
+                timeFrameToPoints.Item2, timeFrameToPoints.Item3, wave.superpositions, timeFrameUncollapsed, patternOccurence,
+                wave.entropies);
             timelapse.AddTimeFrame(timeFrameElement);
         }
 

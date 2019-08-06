@@ -32,8 +32,6 @@ namespace WaveFunctionCollapse
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddParameter(new PatternHistoryParam());
-            pManager.AddNumberParameter("Original weights", "", "", GH_ParamAccess.list);
-            pManager.AddNumberParameter("Modified weights", "", "", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -62,16 +60,41 @@ namespace WaveFunctionCollapse
 
             int width = Utils.GetNumberofPointsInOneDimension(wavePoints[0].X, wavePoints[wavePoints.Count - 1].X);
             int height = Utils.GetNumberofPointsInOneDimension(wavePoints[0].Y, wavePoints[wavePoints.Count - 1].Y);
-            
+
             // Prepare image data. 
-            var image = convertImageListToArray(rawImage, width, height);
+            //var image = convertImageListToArray(rawImage, width, height);
+            var image = generateImage(width, height);
+
 
             // Run Wave Function Collapse.
             var wfc = new WaveFunctionCollapseRunner();
             var history = wfc.Run(patterns, N, width, height, weights, (int)iterations, backtrack, image);
             var return_value = new GH_WaveCollapseHistory(history);
 
+            
+
             DA.SetData(0, return_value);
+        }
+
+        double[,] generateImage(int width, int height)
+        {
+            double[,] convertedImage = new double[width, height];
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    if ((i < 5 && j < 5) || ( i > width - 5 && j > height - 5 ))
+                    {
+                        convertedImage[i, j] = 0;
+
+                    }
+                    else
+                    {
+                        convertedImage[i, j] = 1;
+                    }
+                }
+            }
+            return convertedImage;
         }
 
         double[,] convertImageListToArray(List<double> image, int width, int height)
