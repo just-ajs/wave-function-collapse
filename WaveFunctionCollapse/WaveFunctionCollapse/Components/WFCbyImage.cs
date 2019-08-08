@@ -63,7 +63,7 @@ namespace WaveFunctionCollapse
 
             // Prepare image data. 
             //var image = convertImageListToArray(rawImage, width, height);
-            var image = generateImage(width, height);
+            var image = Utils.generateRandomImage(width, height);
 
 
             // Run Wave Function Collapse.
@@ -76,26 +76,8 @@ namespace WaveFunctionCollapse
             DA.SetData(0, return_value);
         }
 
-        double[,] generateImage(int width, int height)
-        {
-            double[,] convertedImage = new double[width, height];
-            for (int i = 0; i < width; i++)
-            {
-                for (int j = 0; j < height; j++)
-                {
-                    if ((i < 5 && j < 5) || ( i > width - 5 && j > height - 5 ))
-                    {
-                        convertedImage[i, j] = 0;
 
-                    }
-                    else
-                    {
-                        convertedImage[i, j] = 1;
-                    }
-                }
-            }
-            return convertedImage;
-        }
+
 
         double[,] convertImageListToArray(List<double> image, int width, int height)
         {

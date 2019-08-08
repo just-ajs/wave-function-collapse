@@ -10,6 +10,8 @@ namespace WaveFunctionCollapse
 {
     public static class Utils
     {
+
+
         // Find width and height of surface
         public static int GetNumberofPointsInOneDimension(double firstPointCoordinate, double secondPointCoordinate)
         {
@@ -28,7 +30,52 @@ namespace WaveFunctionCollapse
             }
         }
 
-        
+        public static double[,] generateRandomImage(int width, int height)
+        {
+            double[,] convertedImage = new double[width, height];
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    if ((i < 5 && j < 5) || (i > width - 5 && j > height - 5))
+                    {
+                        convertedImage[i, j] = 0;
+
+                    }
+                    else
+                    {
+                        convertedImage[i, j] = 1;
+                    }
+                }
+            }
+            return convertedImage;
+        }
+
+        public static float CountSuccessfullCellsInImageArea(double[,] image, WaveCollapseHistoryElement wfc)
+        {
+            int numberOfImageCellsInImage = 0;
+            int numberOfNotWhiteCells = 0;
+
+            for (int i = 0; i < wfc.Superpositions.GetLength(0); i++)
+            {
+                for (int j = 0; j < wfc.Superpositions.GetLength(1); j++)
+                {
+                    if (image[i, j] < 0.5)
+                    {
+                        numberOfImageCellsInImage++;
+
+                        var cellState = wfc.Superpositions[i, j].state;
+                        if (cellState != State.EMPTY)
+                        {
+                            numberOfNotWhiteCells++;
+                        }
+                    }
+                }
+            }
+
+            return numberOfNotWhiteCells / (numberOfImageCellsInImage * 1.0f);
+        }
+
 
         public static Color[,] BlurImage(Color[,] image)
         {
@@ -184,7 +231,7 @@ namespace WaveFunctionCollapse
             return waveElements;
         }
 
-        public static void SaveWeightToFile(List<double> realWeights, List<double> newWeight)
+        public static void SaveWeightToFile(List<double> realWeights, List<double> newWeight, string fileName)
         {
             var sb = buildWeightDataString(realWeights, newWeight);
             string filePath = @"R:\csv\weights\raw_and_edited_weights.csv";

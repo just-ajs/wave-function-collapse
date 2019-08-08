@@ -24,6 +24,7 @@ namespace WaveFunctionCollapse
         public int[] PatternOccurence;
         public double[,] Entropies;
 
+
         public WaveCollapseHistoryElement(List<Point3d> halfTile, List<Point3d> fullTile, 
             List<Point3d> empty, Superposition[,] superpositions, TileSuperposition[,] uncollapsed, int[] patternOccurence,
             double[,] entropies)

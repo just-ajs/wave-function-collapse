@@ -17,7 +17,7 @@ namespace WaveFunctionCollapse
         float highestWeight;
 
         readonly double[,] image;
-
+        
         //public List<double> recalculatedWeights;
         //public List<Pattern> recalculatedPatterns;
 
@@ -41,8 +41,8 @@ namespace WaveFunctionCollapse
             this.patternSize = patternSize;
             
 
-            lowestWeight = getLowestWeight();
-            highestWeight = getHighestWeight();
+            lowestWeight = getLowestWeight(patterns);
+            highestWeight = getHighestWeight(patterns);
 
             superpositions = new Superposition[width, height];
 
@@ -71,8 +71,8 @@ namespace WaveFunctionCollapse
 
             this.image = image;
 
-            lowestWeight = getLowestWeight();
-            highestWeight = getHighestWeight();
+            lowestWeight = getLowestWeight(patterns);
+            highestWeight = getHighestWeight(patterns);
 
             superpositions = new Superposition[width, height];
 
@@ -251,7 +251,7 @@ namespace WaveFunctionCollapse
             return Tuple.Create(coordx, coordy, nextPattern);
         }
 
-       
+
 
         // Find lowest entropy position in entire wave, pick new pattern for this position
         public Tuple<int, int, Pattern, int> ObserveWithImage(double[,] image)
@@ -261,7 +261,7 @@ namespace WaveFunctionCollapse
             {
                 double _random = random.Next(100);
 
-                if (_random/100.0 < 0.8)
+                if (_random / 100.0 < 0.90)
                 {
                     coordx = (int)cellsByEntropyFromImage.Values[0].X;
                     coordy = (int)cellsByEntropyFromImage.Values[0].Y;
@@ -285,24 +285,21 @@ namespace WaveFunctionCollapse
             var recalculatedPatternsForThisPixel = RecalculateWeights(image, coordx, coordy);
             var recalculatedWeights = GetWeightsFromPatterns(recalculatedPatternsForThisPixel);
             var originalWeights = GetWeightsFromPatterns(patterns);
-            Utils.SaveWeightToFile(originalWeights, recalculatedWeights);
+
+            if (image[coordx, coordy] < 0.1)
+            {
+                Utils.SaveWeightToFile(originalWeights, recalculatedWeights, "linear_mapping");
+            }
 
             var nextPattern = new Pattern();
             int patternIndex = 0;
 
-            // Check what is the value of this position in the image data.
-           // if (image[coordx, coordy] < 0.9)
-           // {
-                // Find pattern for lowest entropy position
-                nextPattern = this.PickRandomPatternForGivenSuperpositionWithTweakedWeights(coordx, coordy, recalculatedPatternsForThisPixel);
-                patternIndex = getPatternIndex(recalculatedPatternsForThisPixel, nextPattern);
-            //}
-            //else
-            //{
-            //    // Find pattern for lowest entropy position
-            //    nextPattern = this.PickRandomPatternForGivenSuperposition(coordx, coordy);
-            //    patternIndex = getPatternIndex(patterns, nextPattern);
-            //}
+            // Find pattern for lowest entropy position
+            nextPattern = this.PickRandomPatternForGivenSuperpositionWithTweakedWeights(coordx, coordy, recalculatedPatternsForThisPixel);
+            patternIndex = getPatternIndex(recalculatedPatternsForThisPixel, nextPattern);
+
+            // Check if pattern has high weight
+
 
             return Tuple.Create(coordx, coordy, nextPattern, patternIndex);
         }
@@ -332,7 +329,7 @@ namespace WaveFunctionCollapse
             // This is not automatic now - HARD CODED TROLOLOLOLO
 
             // Take image value - 0 is black, 1 is white
-            float cellValue = (float)image[coordX, coordY];
+            float cellValueFromImage = (float)image[coordX, coordY];
 
             // Copy patterns
             List<Pattern> clone = new List<Pattern>();
@@ -347,7 +344,7 @@ namespace WaveFunctionCollapse
 
             var stateEmptyWeight = weights[0];
             var stateHalfWeight = weights[1];
-            var stateFullWeight = weights[1];
+            var stateFullWeight = weights[2];
 
             // Go through every pattern and reassing values
             for (int i = 0; i < clone.Count; i++)
@@ -362,25 +359,53 @@ namespace WaveFunctionCollapse
                     {
                         if (clone[i].MiniTile[k, m] == State.EMPTY)
                         {
-                            sumWeights += cellValue * stateEmptyWeight;
+                            sumWeights += 0.20f;
                         }
                         else if (clone[i].MiniTile[k, m] == State.HALF_TILE)
                         {
-                            sumWeights += Math.Abs(0.5f - cellValue) * stateHalfWeight;
+                            sumWeights += 0.28f;
                         }
                         else if (clone[i].MiniTile[k, m] == State.FULL_TILE)
                         {
-                            sumWeights += (1.0f - cellValue) * highestWeight;
+                            sumWeights += 0.52f;
                         }
                     }
                 }
                 clone[i].Weight = sumWeights;
             }
 
+            // This should remap values so they are in the same range as in the original image.
+            remapTheWeightsToLowestAndHighestWeight(clone);
+
             return clone;
         }
 
-        float getLowestWeight()
+        void remapTheWeightsToLowestAndHighestWeight(List<Pattern> recalculatedPatterns)
+        {
+            // The range of weights of recalculated patterns
+            var start1 = getLowestWeight(recalculatedPatterns);
+            var start2 = getHighestWeight(recalculatedPatterns);
+
+            for (int i = 0; i < recalculatedPatterns.Count; i++)
+            {
+                float weight = recalculatedPatterns[i].Weight;
+                var newWeight = remap(weight, start1, start2, lowestWeight, highestWeight);
+
+                recalculatedPatterns[i].Weight = newWeight;
+            }
+           
+
+        }
+
+        float remap(float value, float start1, float stop1,
+            float start2, float stop2)
+        {
+            float result = start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));
+
+            return result;
+        }
+
+        float getLowestWeight(List<Pattern> patterns)
         {
             float lowest = 100000.0f;
 
@@ -395,7 +420,7 @@ namespace WaveFunctionCollapse
             return lowest; 
         }
 
-        float getHighestWeight()
+        float getHighestWeight(List<Pattern> patterns)
         {
             float highest = 0.0f;
 

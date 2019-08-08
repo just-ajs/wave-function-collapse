@@ -62,7 +62,7 @@ namespace WaveFunctionCollapse
         {
             coefficients = new bool[patternFromSample.Count];
             coefficients[patternIndex] = true;
-            
+
             // Set entropy to zero because pattern is collapsed.
             Entropy = 0;
 

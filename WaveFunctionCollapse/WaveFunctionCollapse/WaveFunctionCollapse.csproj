@@ -69,6 +69,8 @@
     <Compile Include="Components\Get Data\ExportWFCforPix2Pix.cs" />
     <Compile Include="Components\Get Data\GetContradictionsData.cs" />
     <Compile Include="Components\Get Data\GetWaveDimension.cs" />
+    <Compile Include="Components\Get Data\EvaluateImageResult.cs" />
+    <Compile Include="Components\Get Data\EvaluateImageResult_Multiple.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="WaveOutputs.cs" />
     <Compile Include="Components\Pattern From Sample\OverlappingModel.cs" />
