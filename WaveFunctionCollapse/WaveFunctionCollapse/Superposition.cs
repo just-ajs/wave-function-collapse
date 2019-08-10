@@ -11,6 +11,8 @@ namespace WaveFunctionCollapse
 
         public bool[] coefficients;
         public State state;
+        public Pattern collapsedPattern;
+        public int collapsedIndex;
 
         // The more possible patterns the highest entropy
         public double Entropy { get; private set; }
@@ -68,6 +70,8 @@ namespace WaveFunctionCollapse
 
             // Assign enum value of zero zero. 
             state = patternFromSample[patternIndex].MiniTile[0, 0];
+            collapsedPattern = patternFromSample[patternIndex];
+            collapsedIndex = patternIndex;
         }
 
         // If another superposition has false value - set also false to this one

@@ -52,6 +52,10 @@ namespace WaveFunctionCollapse.Components
             var waveElements = Utils.GetObservedWave(waveCollapseDataset);
             var patterns = Utils.GetPatternsFromSample(gh_patterns);
 
+            var onewfc = waveElements[0];
+
+            List<List<int>> patternOccurence = new List<List<int>>();
+
             // Get picture width and height.
             width = waveElements[0].Superpositions.GetLength(0);
             height = waveElements[0].Superpositions.GetLength(1);
@@ -85,20 +89,52 @@ namespace WaveFunctionCollapse.Components
                 var blurredNoiseReducedMasked = Utils.AddMask(blurredNoiseReduced02, background, mask, 0.7f);
 
                 // Merge original and processed image.
-                var mergedImages = mergeTwoImages(orignalPictureRGB, blurredNoiseReducedMasked);
+                //var mergedImages = mergeTwoImages(orignalPictureRGB, blurredNoiseReducedMasked);
 
                 // Plot from RGB
-                Utils.PlotPixelsFromRGB(mergedImages, _imageBuffer);
+                //Utils.PlotPixelsFromRGB(mergedImages, _imageBuffer);
 
                 // Save to file
-                Utils.SaveToPicture(mergedImages, i, series, _imageBuffer);
+                //Utils.SaveToPicture(mergedImages, i, series, _imageBuffer);
+
+                var list = GetPatternOccurenceFromMaskedArea(waveElements[i], patterns, blurredNoiseReducedMasked, mask);
+                patternOccurence.Add(list);
             }
+
+            //Utils.SavePatternOccurencesToFiles(patternOccurence);
 
         }
 
-        void GetPatternsFromMaskedArea()
+
+
+        List<int> GetPatternOccurenceFromMaskedArea(WaveCollapseHistoryElement wfc, PatternFromSampleElement patterns, Color[,] masked, Color black)
         {
-            List<Pattern> goodPatterns = new List<Pattern>();
+            //var x = wfc.
+            var x = patterns.Patterns;
+            var superposition = wfc.Superpositions;
+
+            // List of pattern 
+            List<int> goodPatternsOccurence = new List<int>();
+
+            // Fill list with zeros
+            for (int i = 0; i < x.Count; i++)
+            {
+                goodPatternsOccurence.Add(0);
+            }
+
+            for (int i = 0; i < superposition.GetLength(0); i++)
+            {
+                for (int j = 0; j < superposition.GetLength(1); j++)
+                {
+                    if (masked[i,j] == black)
+                    {
+                        int index = superposition[i, j].collapsedIndex;
+                        goodPatternsOccurence[index]++;
+                    }
+                }
+            }
+
+            return goodPatternsOccurence;
         }
 
         

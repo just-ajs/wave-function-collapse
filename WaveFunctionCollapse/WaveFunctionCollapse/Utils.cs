@@ -253,6 +253,32 @@ namespace WaveFunctionCollapse
             return sb;
         }
 
+        public static void SavePatternOccurencesToFiles(List<List<int>> x)
+        {
+            for (int i = 0; i < x.Count; i++)
+            {
+                SavePatternOccurenceToFile(x[i], i);
+            }
+
+        }
+
+
+        public static void SavePatternOccurenceToFile(List<int> y, int index)
+        {
+
+            StringBuilder sb = new StringBuilder();
+
+            for (int i = 0; i < y.Count; i++)
+            {
+                sb.AppendFormat("{0}", y[i]);
+                sb.AppendLine();
+            }
+
+            string filePath = @"R:\csv\success_occurence\" + index + ".csv";
+            System.IO.File.WriteAllText(filePath, sb.ToString());
+        }
+
+
         public static void SaveToTextFile(Superposition[,] superpositions, int width, int height)
         {
             string[] indices = new string[superpositions.GetLength(0) * superpositions.GetLength(1)];
