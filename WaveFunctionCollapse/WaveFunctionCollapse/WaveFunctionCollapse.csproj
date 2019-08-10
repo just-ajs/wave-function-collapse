@@ -71,6 +71,7 @@
     <Compile Include="Components\Get Data\GetWaveDimension.cs" />
     <Compile Include="Components\Get Data\EvaluateImageResult.cs" />
     <Compile Include="Components\Get Data\EvaluateImageResult_Multiple.cs" />
+    <Compile Include="Components\Get Data\SaveSuccessRateToCSV.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="WaveOutputs.cs" />
     <Compile Include="Components\Pattern From Sample\OverlappingModel.cs" />
@@ -98,6 +99,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WaveFunctionCollapseRunner.cs" />
     <Compile Include="Components\WFCbyImage.cs" />
+    <Compile Include="Components\WFCByImage_Multiple.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

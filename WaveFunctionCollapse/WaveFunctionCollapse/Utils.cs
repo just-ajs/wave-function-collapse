@@ -233,15 +233,15 @@ namespace WaveFunctionCollapse
 
         public static void SaveWeightToFile(List<double> realWeights, List<double> newWeight, string fileName)
         {
-            var sb = buildWeightDataString(realWeights, newWeight);
-            string filePath = @"R:\csv\weights\raw_and_edited_weights.csv";
+            var sb = buildWeightDataString(realWeights, newWeight, fileName);
+            string filePath = @"R:\csv\weights_exponential\" + fileName+ ".csv";
             System.IO.File.WriteAllText(filePath, sb.ToString());
         }
 
-        static StringBuilder buildWeightDataString(List<double> realWeights, List<double> newWeights)
+        static StringBuilder buildWeightDataString(List<double> realWeights, List<double> newWeights, string fileName)
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendFormat("{0}, {1}", "Original weights", "New weights");
+            sb.AppendFormat("{0}, {1}", "Original weights", fileName);
             sb.AppendLine();
 
             for (int i = 0; i < realWeights.Count; i++)

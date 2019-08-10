@@ -57,6 +57,8 @@ namespace WaveFunctionCollapse
             
         }
 
+
+
         protected override System.Drawing.Bitmap Icon
         {
             get

@@ -96,6 +96,11 @@ namespace WaveFunctionCollapse.Components
 
         }
 
+        void GetPatternsFromMaskedArea()
+        {
+            List<Pattern> goodPatterns = new List<Pattern>();
+        }
+
         
 
         Superposition[,] RemoveNoiseFromImage(WaveCollapseHistoryElement wfc, PatternFromSampleElement p)

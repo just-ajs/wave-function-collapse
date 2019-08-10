@@ -280,15 +280,18 @@ namespace WaveFunctionCollapse
 
             // Sorted list: Find lowest entropy cooridnates based on sorted list
 
+            float weight01 = 0.10f;
+            float weight02 = 0.45f;
+            float weight03 = 0.45f;
 
             // Recalculate patterns and save new weights with patterns to csv file
-            var recalculatedPatternsForThisPixel = RecalculateWeights(image, coordx, coordy);
+            var recalculatedPatternsForThisPixel = RecalculateWeights(image, coordx, coordy, weight01, weight02, weight03);
             var recalculatedWeights = GetWeightsFromPatterns(recalculatedPatternsForThisPixel);
             var originalWeights = GetWeightsFromPatterns(patterns);
 
             if (image[coordx, coordy] < 0.1)
             {
-                Utils.SaveWeightToFile(originalWeights, recalculatedWeights, "linear_mapping");
+                Utils.SaveWeightToFile(originalWeights, recalculatedWeights, weight01 + "_" + weight02 + "_" + weight03);
             }
 
             var nextPattern = new Pattern();
@@ -318,7 +321,7 @@ namespace WaveFunctionCollapse
             return newWeights;
         }
 
-        List<Pattern> RecalculateWeights(double[,] image, int coordX, int coordY)
+        List<Pattern> RecalculateWeights(double[,] image, int coordX, int coordY, float weight01, float weight02, float weight03)
         {
             // This function needs to apply linear mapping to recalculate weights.
             // In the class there are stored lowest and highest weights and that is a weight range.
@@ -359,25 +362,58 @@ namespace WaveFunctionCollapse
                     {
                         if (clone[i].MiniTile[k, m] == State.EMPTY)
                         {
-                            sumWeights += 0.20f;
+                            sumWeights += weight01;
                         }
                         else if (clone[i].MiniTile[k, m] == State.HALF_TILE)
                         {
-                            sumWeights += 0.28f;
+                            sumWeights += weight02;
                         }
                         else if (clone[i].MiniTile[k, m] == State.FULL_TILE)
                         {
-                            sumWeights += 0.52f;
+                            sumWeights += weight03;
                         }
                     }
                 }
-                clone[i].Weight = sumWeights;
+                clone[i].Weight = powerWeight(clone[i], sumWeights);
             }
 
             // This should remap values so they are in the same range as in the original image.
-            remapTheWeightsToLowestAndHighestWeight(clone);
+            // remapTheWeightsToLowestAndHighestWeight(clone);
 
             return clone;
+        }
+
+
+        float powerWeight (Pattern pattern, float weight)
+        {
+            double weightToThePower = 0;
+            int notEmpty = 0;
+            for (int i = 0; i < pattern.patternSize; i++)
+            {
+                for (int j = 0; j < pattern.patternSize; j++)
+                {
+                    if (pattern.MiniTile[i,j] == State.FULL_TILE || pattern.MiniTile[i,j] == State.HALF_TILE)
+                    {
+                        notEmpty++;
+                    }
+                }
+            }
+            double power = notEmpty + 1.0f;
+
+            if (notEmpty != 0)
+            {
+                weightToThePower = Math.Pow((double)weight, power);
+            }
+
+            
+            if (weightToThePower > 0)
+            {
+                return (float)weightToThePower;
+            }
+            else
+            {
+                return weight;
+            }
         }
 
         void remapTheWeightsToLowestAndHighestWeight(List<Pattern> recalculatedPatterns)

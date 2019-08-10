@@ -60,6 +60,7 @@ namespace WaveFunctionCollapse
             int width = Utils.GetNumberofPointsInOneDimension(wavePoints[0].X, wavePoints[wavePoints.Count - 1].X);
             int height = Utils.GetNumberofPointsInOneDimension(wavePoints[0].Y, wavePoints[wavePoints.Count - 1].Y);
 
+
             // RUN WAVEFUNCION COLLAPSE
             var wfc = new WaveFunctionCollapseRunner();
             var history = wfc.Run(patterns, N, width, height, weights, backtrack, (int)iterations);
