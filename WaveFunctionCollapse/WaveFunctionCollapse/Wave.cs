@@ -27,7 +27,7 @@ namespace WaveFunctionCollapse
         public double[,] entropies;
 
         public List<Point3d> half;
-        public List<Point3d> full;
+        public List<Point3d> full; 
         public List<Point3d> empty;
 
         private static Random random = new Random();

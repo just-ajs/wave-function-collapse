@@ -37,6 +37,7 @@ namespace WaveFunctionCollapse
         }
     }
 
+
     // Type that passes all steps of wave function observations
     public class GH_WaveCollapseResults : GH_Goo<IWaveCollapseOutputs>
     {
@@ -94,7 +95,33 @@ namespace WaveFunctionCollapse
         }
     }
 
- 
 
-    
+    public class GH_Image : GH_Goo<InputImage>
+    {
+        public GH_Image() { Value = new InputImage(); }
+        public GH_Image(InputImage native) { Value = native; }
+
+        public override bool IsValid => true;
+
+        public override string TypeName => "Input Image";
+
+        public override string TypeDescription => "Input Image with masked areas";
+
+        public override bool CastFrom(object source)
+        {
+            return base.CastFrom(source);
+        }
+
+        public override IGH_Goo Duplicate()
+        {
+            return new GH_Image();
+        }
+
+        public override string ToString()
+        {
+            return $"Dataset object containing {Value.Brightness} elements";
+        }
+    }
+
+
 }

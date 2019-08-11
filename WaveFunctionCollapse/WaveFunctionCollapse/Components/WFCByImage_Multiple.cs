@@ -24,7 +24,7 @@ namespace WaveFunctionCollapse
 
 
             // Image. 
-            pManager.AddNumberParameter("Image", "", "", GH_ParamAccess.list);
+            pManager.AddParameter(new InputImageParam());
         }
 
 
@@ -54,8 +54,8 @@ namespace WaveFunctionCollapse
             DA.GetData<double>(4, ref dataSize);
 
             // Get image data.
-            List<double> rawImage = new List<double>();
-            DA.GetDataList(5, rawImage);
+            GH_Image inputImage = new GH_Image();
+            DA.GetData(4, ref inputImage);
 
 
 
@@ -69,7 +69,8 @@ namespace WaveFunctionCollapse
 
             // Prepare image data. 
             //var image = convertImageListToArray(rawImage, width, height);
-            var image = Utils.generateRandomImage(width, height);
+            //var image = Utils.generateRandomImage(width, height);
+            var image = inputImage.Value.Brightness;
 
             List<WaveCollapseHistoryElement> outputs = new List<WaveCollapseHistoryElement>();
 

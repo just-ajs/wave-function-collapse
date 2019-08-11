@@ -23,7 +23,7 @@ namespace WaveFunctionCollapse
             pManager.AddNumberParameter("Iterations", "", "", GH_ParamAccess.item);
 
             // Image. 
-            pManager.AddNumberParameter("Image", "", "", GH_ParamAccess.list);
+            pManager.AddParameter(new InputImageParam());
 
             // New weights
             pManager.AddNumberParameter("Weights", "", "", GH_ParamAccess.list);
@@ -51,8 +51,8 @@ namespace WaveFunctionCollapse
             DA.GetData<double>(3, ref iterations);
 
             // Get image data.
-            List<double> rawImage = new List<double>();
-            DA.GetDataList(4, rawImage);
+            GH_Image inputImage = new GH_Image();
+            DA.GetData(4, ref inputImage);
 
             List<double> newWeights = new List<double>();
             DA.GetDataList(5, newWeights);
@@ -70,8 +70,8 @@ namespace WaveFunctionCollapse
 
             // Prepare image data. 
             //var image = convertImageListToArray(rawImage, width, height);
-            var image = Utils.generateRandomImage(width, height);
-
+            //var image = Utils.generateRandomImage(width, height);
+            var image = inputImage.Value.Brightness;
 
             // Run Wave Function Collapse.
             var wfc = new WaveFunctionCollapseRunner();
@@ -84,7 +84,7 @@ namespace WaveFunctionCollapse
             }
             else
             {
-                history = wfc.Run(patterns, N, width, height, weights, (int)iterations, backtrack, image);
+                history = wfc.Run(patterns, N, width, height, weights, (int)iterations, backtrack,                                                                               image);
 
             }
             var return_value = new GH_WaveCollapseHistory(history);
@@ -100,7 +100,7 @@ namespace WaveFunctionCollapse
             double[,] convertedImage = new double[width, height];
 
             for (int i = 0; i < width; i ++)
-            {
+            {  
                 for (int j = 0; j < height; j ++)
                 {
                     convertedImage[i, j] = image[i*j + j];

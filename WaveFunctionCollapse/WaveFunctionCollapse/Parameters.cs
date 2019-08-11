@@ -28,6 +28,7 @@ namespace WaveFunctionCollapse
         }
     }
 
+
     public class PatternResultsParam : GH_PersistentParam<GH_WaveCollapseResults>
     {
         public PatternResultsParam() : base("Pattern history parameter", "PatternHistoryParam", "This is a pattern history parameter", "WFC", "Parameters") { }
@@ -74,4 +75,25 @@ namespace WaveFunctionCollapse
     }
 
 
+    public class InputImageParam : GH_PersistentParam<GH_Image>
+    {
+        public InputImageParam() : base("Image", "", "", "WFC", "Parameters") { }
+
+        public override Guid ComponentGuid
+        {
+            get { return new Guid("4CAB78CC-E7A8-4AFD-B962-FEBCB09F82CA"); }
+        }
+
+        protected override GH_GetterResult Prompt_Plural(ref List<GH_Image> values)
+        {
+            values = new List<GH_Image>();
+            return GH_GetterResult.success;
+        }
+
+        protected override GH_GetterResult Prompt_Singular(ref GH_Image value)
+        {
+            value = new GH_Image();
+            return GH_GetterResult.success;
+        }
+    }
 }
