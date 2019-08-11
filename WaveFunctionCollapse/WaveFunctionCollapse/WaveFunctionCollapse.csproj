@@ -77,7 +77,7 @@
     <Compile Include="Components\Pattern From Sample\OverlappingModel.cs" />
     <Compile Include="Components\Visualise\EvaluateProportionsComponent.cs" />
     <Compile Include="Components\Pattern From Sample\SimpleTiledModel.cs" />
-    <Compile Include="Components\Get Data\ExportWFC.cs" />
+    <Compile Include="Components\Get Data\ExportOnlyWFCResult.cs" />
     <Compile Include="Components\Get Data\WaveFunctionCollapseMultipleComponent.cs" />
     <Compile Include="PatternFromSample.cs" />
     <Compile Include="Components\Visualise\RandomPatternComponent.cs" />

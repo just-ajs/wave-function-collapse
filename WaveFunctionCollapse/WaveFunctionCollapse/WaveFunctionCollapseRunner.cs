@@ -176,24 +176,7 @@ namespace WaveFunctionCollapse
                     steps++;
                 }
 
-                void returnLocationsWithDifferentWeight (double[,] picture)
-                {
-                    List<int> x = new List<int>();
-                    List<int> y = new List<int>();
-                    
-                    
-                    for (int i = 0; i < picture.GetLength(0); i++)
-                    {
-                        for (int j = 0; j < picture.GetLength(1); j++)
-                        {
-                            if (picture[i,j] != 1)
-                            {
-                                x.Add(i);
-                                y.Add(j);
-                            }
-                        }
-                    }
-                }
+
 
                 if (wave.Contradiction())
                 {
@@ -220,8 +203,112 @@ namespace WaveFunctionCollapse
         }
 
 
+        // Input new weights!!!! 
+        public WaveCollapseHistory Run(List<Pattern> patterns, int N, int width, int height,
+            float[] weights, int iterations, bool backtrack,
+            double[,] image, List<double> newWeights)
+        {
+            WaveCollapseHistory timelapse = new WaveCollapseHistory();
 
- 
+            var counter = 0;
+            var sumOfCollapsedSteps = 0;
+
+            while (counter < iterations)
+            {
+                counter++;
+                int steps = 0;
+
+                wave = new Wave(width, height, patterns, N, image);
+                //SeedByImage(image, patterns);
+                //AddCurrentFrameToHistory(timelapse);
+
+                while (!wave.IsCollapsed())
+                {
+                    if (wave.Contradiction()) { break; }
+
+                    var observed = wave.ObserveWithImageAndWeights(image, newWeights);
+
+                    if (backtrack)
+                    {
+                        var canPropagate = wave.CheckIfPropagateWithoutContradictionWithRecalculatedWeights
+                            (observed.Item1, observed.Item2, observed.Item3, observed.Item4);
+                        int repeatedObservations = 0;
+
+                        while (!canPropagate)
+                        {
+                            observed = wave.ObserveWithImageAndWeights(image, newWeights);
+
+                            if (observed.Item3 == null)
+                            {
+                                throw new Exception("Null pattern selected");
+                            }
+                            canPropagate = wave.CheckIfPropagateWithoutContradictionWithRecalculatedWeights
+                                (observed.Item1, observed.Item2, observed.Item3, observed.Item4);
+                            repeatedObservations++;
+
+                            if (repeatedObservations > (int)(patterns.Count / 2))
+                            {
+                                break;
+                            }
+                        }
+
+                        wave.PropagateByUpdatingSuperposition(observed.Item1, observed.Item2, patterns[observed.Item4]);
+                    }
+                    else
+                    {
+                        observed = wave.ObserveWithImageAndWeights(image, newWeights);
+                        try  { wave.PropagateByUpdatingSuperposition(observed.Item1, observed.Item2, patterns[observed.Item4]); }
+                        catch (DataMisalignedException ex)  {   break;  }
+                    }
+
+                    AddCurrentFrameToHistory(timelapse);
+                    steps++;
+                }
+
+
+                if (wave.Contradiction())
+                {
+                    double percentage = steps / (width * height * 1.0);
+                    System.Diagnostics.Debug.WriteLine("Contradiction on " + steps + " th step of " + width * height +
+                        ", which is " + percentage + " of the whole wave");
+
+                    sumOfCollapsedSteps += steps;
+
+                    timelapse.Clear();
+                    continue;
+                }
+                else
+                {
+                    averageCollapseStep = sumOfCollapsedSteps / counter;
+                    System.Diagnostics.Debug.WriteLine("Average collapse step is: " + averageCollapseStep + " for " + width * height + " steps");
+                    break;
+                }
+            }
+
+            averageCollapseStep = sumOfCollapsedSteps / counter;
+            System.Diagnostics.Debug.WriteLine("Average collapse step is: " + averageCollapseStep + " for " + width * height + " steps");
+            return timelapse;
+        }
+
+        void returnLocationsWithDifferentWeight(double[,] picture)
+        {
+            List<int> x = new List<int>();
+            List<int> y = new List<int>();
+
+
+            for (int i = 0; i < picture.GetLength(0); i++)
+            {
+                for (int j = 0; j < picture.GetLength(1); j++)
+                {
+                    if (picture[i, j] != 1)
+                    {
+                        x.Add(i);
+                        y.Add(j);
+                    }
+                }
+            }
+        }
+
 
         public void SeedRandom(int width, int height, List<Pattern> patterns)
         {

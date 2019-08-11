@@ -8,9 +8,6 @@ namespace WaveFunctionCollapse
 {
     public class WFCbyImage : GH_Component
     {
-        /// <summary>
-        /// Initializes a new instance of the WFCbyImage class.
-        /// </summary>
         public WFCbyImage()
           : base("WFCbyImage", "Nickname", "Description",
               "WFC", "Data Analysis")
@@ -27,6 +24,10 @@ namespace WaveFunctionCollapse
 
             // Image. 
             pManager.AddNumberParameter("Image", "", "", GH_ParamAccess.list);
+
+            // New weights
+            pManager.AddNumberParameter("Weights", "", "", GH_ParamAccess.list);
+            pManager.AddBooleanParameter("Apply weights", "", "", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -52,6 +53,12 @@ namespace WaveFunctionCollapse
             // Get image data.
             List<double> rawImage = new List<double>();
             DA.GetDataList(4, rawImage);
+
+            List<double> newWeights = new List<double>();
+            DA.GetDataList(5, newWeights);
+
+            bool applyWeights = false;
+            DA.GetData(6, ref applyWeights);
             
             // Extract parameters to run Wave Function Collapse.
             var patterns = gh_patterns.Value.Patterns;
@@ -68,10 +75,19 @@ namespace WaveFunctionCollapse
 
             // Run Wave Function Collapse.
             var wfc = new WaveFunctionCollapseRunner();
-            var history = wfc.Run(patterns, N, width, height, weights, (int)iterations, backtrack, image);
-            var return_value = new GH_WaveCollapseHistory(history);
+            var history = new WaveCollapseHistory();
 
-            
+            if (applyWeights)
+            {
+                history = wfc.Run(patterns, N, width, height, weights, (int)iterations, backtrack, image, newWeights);
+
+            }
+            else
+            {
+                history = wfc.Run(patterns, N, width, height, weights, (int)iterations, backtrack, image);
+
+            }
+            var return_value = new GH_WaveCollapseHistory(history);
 
             DA.SetData(0, return_value);
         }

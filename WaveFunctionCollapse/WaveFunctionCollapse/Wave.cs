@@ -256,21 +256,14 @@ namespace WaveFunctionCollapse
         // Find lowest entropy position in entire wave, pick new pattern for this position
         public Tuple<int, int, Pattern, int> ObserveWithImage(double[,] image)
         {
+            // Select location
             int coordx, coordy;
-            if (cellsByEntropyFromImage.Count > 0)
-            {
-                double _random = random.Next(100);
+            double _random = random.Next(100)/100;
 
-                if (_random / 100.0 < 0.90)
-                {
-                    coordx = (int)cellsByEntropyFromImage.Values[0].X;
-                    coordy = (int)cellsByEntropyFromImage.Values[0].Y;
-                }
-                else
-                {
-                    coordx = (int)cellsByEntropy.Values[0].X;
-                    coordy = (int)cellsByEntropy.Values[0].Y;
-                }
+            if ((cellsByEntropyFromImage.Count > 0))// && (_random < 0.9))
+            {
+               coordx = (int)cellsByEntropyFromImage.Values[0].X;
+               coordy = (int)cellsByEntropyFromImage.Values[0].Y;
             }
             else
             {
@@ -278,36 +271,87 @@ namespace WaveFunctionCollapse
                 coordy = (int)cellsByEntropy.Values[0].Y;
             }
 
-            // Sorted list: Find lowest entropy cooridnates based on sorted list
-
-            float weight01 = 0.10f;
-            float weight02 = 0.45f;
-            float weight03 = 0.45f;
-
-            // Recalculate patterns and save new weights with patterns to csv file
-            var recalculatedPatternsForThisPixel = RecalculateWeights(image, coordx, coordy, weight01, weight02, weight03);
-            var recalculatedWeights = GetWeightsFromPatterns(recalculatedPatternsForThisPixel);
-            var originalWeights = GetWeightsFromPatterns(patterns);
+            // Select pattern
+            var nextPattern = new Pattern();
+            int patternIndex = 0;
 
             if (image[coordx, coordy] < 0.1)
             {
+                float weight01 = 0.10f;
+                float weight02 = 0.45f;
+                float weight03 = 0.45f;
+
+                // Recalculate patterns and save new weights with patterns to csv file
+                var recalculatedPatternsForThisPixel = RecalculateWeights(image, coordx, coordy, weight01, weight02, weight03);
+                var recalculatedWeights = GetWeightsFromPatterns(recalculatedPatternsForThisPixel);
+                var originalWeights = GetWeightsFromPatterns(patterns);
+
                 Utils.SaveWeightToFile(originalWeights, recalculatedWeights, weight01 + "_" + weight02 + "_" + weight03);
+                
+                // Find pattern for lowest entropy position
+                nextPattern = this.PickRandomPatternForGivenSuperpositionWithTweakedWeights(coordx, coordy, recalculatedPatternsForThisPixel);
+                patternIndex = getPatternIndex(recalculatedPatternsForThisPixel, nextPattern);
+            }
+            else
+            {
+                // Find pattern for lowest entropy position
+                nextPattern = this.PickRandomPatternForGivenSuperposition(coordx, coordy);
+                patternIndex = getPatternIndex(patterns, nextPattern);
+
+            }
+
+            return Tuple.Create(coordx, coordy, nextPattern, patternIndex);
+        }
+
+
+        // Find lowest entropy position in entire wave, pick new pattern for this position
+        public Tuple<int, int, Pattern, int> ObserveWithImageAndWeights(double[,] image, List<double> newWeights)
+        {
+            int coordx, coordy;
+            double _random = random.Next(100)/100;
+
+            if ((cellsByEntropyFromImage.Count > 0) && (_random < 0.9))
+            {
+                coordx = (int)cellsByEntropyFromImage.Values[0].X;
+                coordy = (int)cellsByEntropyFromImage.Values[0].Y;
+            }
+            else
+            {
+                coordx = (int)cellsByEntropy.Values[0].X;
+                coordy = (int)cellsByEntropy.Values[0].Y;
             }
 
             var nextPattern = new Pattern();
             int patternIndex = 0;
 
-            // Find pattern for lowest entropy position
-            nextPattern = this.PickRandomPatternForGivenSuperpositionWithTweakedWeights(coordx, coordy, recalculatedPatternsForThisPixel);
-            patternIndex = getPatternIndex(recalculatedPatternsForThisPixel, nextPattern);
+            if (image[coordx, coordy] < 0.3)
+            {
 
-            // Check if pattern has high weight
+                float weight01 = 0.10f;
+                float weight02 = 0.45f;
+                float weight03 = 0.45f;
 
+                // Recalculate patterns and save new weights with patterns to csv file
+                var recalculatedPatternsForThisPixel = AssignNewWeights(image, coordx, coordy, newWeights);
+                var recalculatedWeights = GetWeightsFromPatterns(recalculatedPatternsForThisPixel);
+                var originalWeights = GetWeightsFromPatterns(patterns);
+
+                //Utils.SaveWeightToFile(originalWeights, recalculatedWeights, weight01 + "_" + weight02 + "_" + weight03);
+
+                // Find pattern for lowest entropy position
+                nextPattern = this.PickRandomPatternForGivenSuperpositionWithTweakedWeights(coordx, coordy, recalculatedPatternsForThisPixel);
+                patternIndex = getPatternIndex(recalculatedPatternsForThisPixel, nextPattern);
+            }
+            else
+            {
+                // Find pattern for lowest entropy position
+                nextPattern = this.PickRandomPatternForGivenSuperposition(coordx, coordy);
+                patternIndex = getPatternIndex(patterns, nextPattern);
+
+            }
 
             return Tuple.Create(coordx, coordy, nextPattern, patternIndex);
         }
-
-        
 
         List<double> GetWeightsFromPatterns (List<Pattern> list)
         {
@@ -321,16 +365,30 @@ namespace WaveFunctionCollapse
             return newWeights;
         }
 
+        List<Pattern> AssignNewWeights(double[,] image, int coordX, int coordY, List<double> newWeights)
+        {
+            // Take image value - 0 is black, 1 is white
+            float cellValueFromImage = (float)image[coordX, coordY];
+
+            // Copy patterns
+            List<Pattern> clone = new List<Pattern>();
+            for (int i = 0; i < patterns.Count; i++)
+            {
+                var patternClone = new Pattern(patterns[i].MiniTile, patterns[i].overalWeights, patterns[i].patternSize);
+                clone.Add(patternClone);
+            }
+
+            // Go through every pattern and reassing values
+            for (int i = 0; i < clone.Count; i++)
+            {
+                clone[i].Weight = (float)newWeights[i];
+            }
+
+            return clone;
+        }
+
         List<Pattern> RecalculateWeights(double[,] image, int coordX, int coordY, float weight01, float weight02, float weight03)
         {
-            // This function needs to apply linear mapping to recalculate weights.
-            // In the class there are stored lowest and highest weights and that is a weight range.
-            // If black tile has low weights, and the value on the picture indicate black - it needs to make it higher. 
-            // Ideally algorithm would do that for whole image:
-            // So if there is white, and the white tile has high weight, the weight will stay the same.
-
-            // This is not automatic now - HARD CODED TROLOLOLOLO
-
             // Take image value - 0 is black, 1 is white
             float cellValueFromImage = (float)image[coordX, coordY];
 

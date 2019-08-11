@@ -32,10 +32,13 @@ namespace WaveFunctionCollapse.Components
             pManager.AddParameter(new PatternResultsParam(), "Wave Function Dataset", "WFC", "Wave Function Collapse with history", GH_ParamAccess.item);
             pManager.AddParameter(new PatternFromSampleParam(), "PatternFromSample", "", "", GH_ParamAccess.item);
             pManager.AddTextParameter("Series name", "", "", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("Save pictures", "", "", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("Save average", "", "", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
+            pManager.AddNumberParameter("AverageWeights", "", "", GH_ParamAccess.list);
         }
 
        protected override void SolveInstance(IGH_DataAccess DA)
@@ -48,6 +51,12 @@ namespace WaveFunctionCollapse.Components
 
             string series = "";
             DA.GetData<string>(2, ref series);
+
+            bool savePictures = false;
+            DA.GetData<bool>(3, ref savePictures);
+
+            bool savePatternOccurence = false;
+            DA.GetData<bool>(4, ref savePatternOccurence);
 
             var waveElements = Utils.GetObservedWave(waveCollapseDataset);
             var patterns = Utils.GetPatternsFromSample(gh_patterns);
@@ -88,24 +97,62 @@ namespace WaveFunctionCollapse.Components
                 var mask = Utils.ColorFromRGB(0, 0, 222);
                 var blurredNoiseReducedMasked = Utils.AddMask(blurredNoiseReduced02, background, mask, 0.7f);
 
-                // Merge original and processed image.
-                //var mergedImages = mergeTwoImages(orignalPictureRGB, blurredNoiseReducedMasked);
+                if (savePictures)
+                {
+                    // Merge original and processed image.
+                    var mergedImages = mergeTwoImages(orignalPictureRGB, blurredNoiseReducedMasked);
 
-                // Plot from RGB
-                //Utils.PlotPixelsFromRGB(mergedImages, _imageBuffer);
+                    // Plot from RGB
+                    Utils.PlotPixelsFromRGB(mergedImages, _imageBuffer);
 
-                // Save to file
-                //Utils.SaveToPicture(mergedImages, i, series, _imageBuffer);
+                    // Save to file
+                    Utils.SaveToPicture(mergedImages, i, series, _imageBuffer);
+
+                }
+
 
                 var list = GetPatternOccurenceFromMaskedArea(waveElements[i], patterns, blurredNoiseReducedMasked, mask);
                 patternOccurence.Add(list);
             }
 
-            //Utils.SavePatternOccurencesToFiles(patternOccurence);
+            if (savePatternOccurence)
+            {
+                Utils.SavePatternOccurencesToFiles(patternOccurence);
+
+            }
+            var average = averagePatternOccurence(patternOccurence);
+
+            DA.SetDataList(0, average);
 
         }
 
+        List<float> averagePatternOccurence (List<List<int>> list)
+        {
+            List<float> average = new List<float>();
 
+            for(int i = 0; i < list[0].Count; i++)
+            {
+                average.Add(0);
+            }
+
+            // Go through every list of pattern occurence and sum
+            for (int i = 0; i < list.Count; i++)
+            {
+                // Go through every element and add to list
+                for (int j = 0; j < list[0].Count; j++)
+                {
+                    average[j] += list[i].ElementAt(j);
+                }
+            }
+
+            // Now divide and return floats
+            for (int i = 0; i < average.Count; i++)
+            {
+                average[i] = average[i] / list.Count;
+            }
+
+            return average;
+        }
 
         List<int> GetPatternOccurenceFromMaskedArea(WaveCollapseHistoryElement wfc, PatternFromSampleElement patterns, Color[,] masked, Color black)
         {
