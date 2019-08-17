@@ -100,14 +100,24 @@ namespace WaveFunctionCollapse.Components
                 if (savePictures)
                 {
                     // Merge original and processed image.
-                    var mergedImages = mergeTwoImages(orignalPictureRGB, blurredNoiseReducedMasked);
+                    //var mergedImages = mergeTwoImages(orignalPictureRGB, blurredNoiseReducedMasked);
 
                     // Plot from RGB
-                    Utils.PlotPixelsFromRGB(mergedImages, _imageBuffer);
+                    //Utils.PlotPixelsFromRGB(mergedImages, _imageBuffer);
 
                     // Save to file
-                    Utils.SaveToPicture(mergedImages, i, series, _imageBuffer);
+                    //Utils.SaveToPicture(mergedImages, i, series, _imageBuffer);
 
+                    // Save 01
+                    saveSeries(orignalPictureRGB, processedPictureRGB, "first");
+
+                    // Save 02
+                    saveSeries(blurredNoiseReduced, blurredNoiseReduced02, "second");
+
+                    // Save 03
+                    saveSeries(blurredNoiseReduced03, blurredNoiseReducedMasked, "third");
+
+                    
                 }
 
 
@@ -124,6 +134,20 @@ namespace WaveFunctionCollapse.Components
 
             DA.SetDataList(0, average);
 
+        }
+
+        void processTheImage
+
+        void saveSeries(Color[,] a, Color[,] b, string name)
+        {
+            // Merge original and processed image.
+            var mergedImages = mergeTwoImages(a, b);
+
+            // Plot from RGB
+            Utils.PlotPixelsFromRGB(mergedImages, _imageBuffer);
+
+            // Save to file
+            Utils.SaveToPicture(mergedImages, 0, name, _imageBuffer);
         }
 
         List<float> averagePatternOccurence (List<List<int>> list)

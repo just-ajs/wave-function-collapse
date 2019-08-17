@@ -187,7 +187,8 @@ namespace WaveFunctionCollapse
 
         public static void SaveToPicture(Color[,] picture, int index, string series, byte[] _imageBuffer)
         {
-            string i1Path = @"r:\pix2pix_dataset\01\" + series +  index.ToString() + ".png";
+            //string i1Path = @"R:\csv\image_processing\" + series +  index.ToString() + ".png";
+            string i1Path = @"R:\csv\image_processing\" + series  + ".png";
 
             // Saving to file
             unsafe
@@ -247,6 +248,33 @@ namespace WaveFunctionCollapse
             for (int i = 0; i < realWeights.Count; i++)
             {
                 sb.AppendFormat("{0}, {1}", realWeights[i], newWeights[i]);
+                sb.AppendLine();
+            }
+
+            return sb;
+        }
+
+        public static void SaveConstrainsCheckToFile (float average, List<float> values)
+        {
+            var sb = buildConstrainCheckString(average, values);
+            string filePath = @"R:\csv\constrains_check\" + "01" + ".csv";
+            System.IO.File.WriteAllText(filePath, sb.ToString());
+        }
+
+        static StringBuilder buildConstrainCheckString(float average, List<float> values)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("{0}", "Average");
+            sb.AppendLine();
+            sb.AppendFormat("{0}", average);
+            sb.AppendLine();
+            sb.AppendFormat("{0}", "Values");
+            sb.AppendLine();
+
+
+            for (int i = 0; i < values.Count; i++)
+            {
+                sb.AppendFormat("{0}", values[i]);
                 sb.AppendLine();
             }
 

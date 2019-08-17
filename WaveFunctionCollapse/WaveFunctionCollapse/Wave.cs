@@ -258,9 +258,9 @@ namespace WaveFunctionCollapse
         {
             // Select location
             int coordx, coordy;
-            double _random = random.Next(100)/100;
+            double _random = random.Next(100);
 
-            if ((cellsByEntropyFromImage.Count > 0))// && (_random < 0.9))
+            if ((cellsByEntropyFromImage.Count > 0) && (_random > 1))
             {
                coordx = (int)cellsByEntropyFromImage.Values[0].X;
                coordy = (int)cellsByEntropyFromImage.Values[0].Y;
@@ -275,7 +275,7 @@ namespace WaveFunctionCollapse
             var nextPattern = new Pattern();
             int patternIndex = 0;
 
-            if (image[coordx, coordy] < 0.1)
+            if (image[coordx, coordy] < 0.4)
             {
                 float weight01 = 0.10f;
                 float weight02 = 0.45f;
@@ -294,9 +294,22 @@ namespace WaveFunctionCollapse
             }
             else
             {
+                float weight01 = 0.70f;
+                float weight02 = 0.15f;
+                float weight03 = 0.15f;
+                // Recalculate patterns and save new weights with patterns to csv file
+                var recalculatedPatternsForThisPixel = RecalculateWeights(image, coordx, coordy, weight01, weight02, weight03);
+                var recalculatedWeights = GetWeightsFromPatterns(recalculatedPatternsForThisPixel);
+                var originalWeights = GetWeightsFromPatterns(patterns);
+
+                Utils.SaveWeightToFile(originalWeights, recalculatedWeights, weight01 + "_" + weight02 + "_" + weight03);
+
                 // Find pattern for lowest entropy position
-                nextPattern = this.PickRandomPatternForGivenSuperposition(coordx, coordy);
-                patternIndex = getPatternIndex(patterns, nextPattern);
+                nextPattern = this.PickRandomPatternForGivenSuperpositionWithTweakedWeights(coordx, coordy, recalculatedPatternsForThisPixel);
+                patternIndex = getPatternIndex(recalculatedPatternsForThisPixel, nextPattern);
+                // Find pattern for lowest entropy position
+                //nextPattern = this.PickRandomPatternForGivenSuperposition(coordx, coordy);
+                //patternIndex = getPatternIndex(patterns, nextPattern);
 
             }
 

@@ -43,6 +43,8 @@ namespace WaveFunctionCollapse.Components
 
             var imageB = GetImageBrigthness(resized);
 
+            var getColors = BitmapToColorArray(resized);
+
             var ouputimg = new InputImage(imageB);
             var img = new GH_Image(ouputimg);
 
@@ -73,7 +75,7 @@ namespace WaveFunctionCollapse.Components
                 for (int j = 0; j < img.Height; j++)
                 {
                     var pix = img.GetPixel(i, img.Height - 1 - j);
-                    imgBrightness[i,j] = pix.GetBrightness(); ;
+                    imgBrightness[i,j] = pix.GetBrightness();
                 }
             }
 

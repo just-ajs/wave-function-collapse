@@ -84,7 +84,7 @@ namespace WaveFunctionCollapse
             }
             else
             {
-                history = wfc.Run(patterns, N, width, height, weights, (int)iterations, backtrack,                                                                               image);
+                history = wfc.Run(patterns, N, width, height, weights, (int)iterations, backtrack, image);
 
             }
             var return_value = new GH_WaveCollapseHistory(history);

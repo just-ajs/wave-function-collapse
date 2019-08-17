@@ -121,8 +121,8 @@ namespace WaveFunctionCollapse
                 wave = new Wave(width, height, patterns, N, image);
 
                 // Start with random seed
-                SeedByImage(image, patterns);
-                AddCurrentFrameToHistory(timelapse);
+                //SeedByImage(image, patterns);
+                //AddCurrentFrameToHistory(timelapse);
 
                 // Break if contracition, otherwise run observations until it is not completaly observed
                 while (!wave.IsCollapsed())

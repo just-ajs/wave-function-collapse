@@ -66,6 +66,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Components\Image Comparison\CheckGANConstrains.cs" />
     <Compile Include="Components\Get Data\ExportWFCforPix2Pix.cs" />
     <Compile Include="Components\Get Data\GetContradictionsData.cs" />
     <Compile Include="Components\Get Data\GetWaveDimension.cs" />
@@ -73,6 +74,8 @@
     <Compile Include="Components\Get Data\EvaluateImageResult_Multiple.cs" />
     <Compile Include="Components\Get Data\SaveSuccessRateToCSV.cs" />
     <Compile Include="Components\Get Data\LoadImage.cs" />
+    <Compile Include="Components\Image Comparison\Distancebetweenimages.cs" />
+    <Compile Include="Components\Get Data\GetColor.cs" />
     <Compile Include="InputImage.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="WaveOutputs.cs" />
